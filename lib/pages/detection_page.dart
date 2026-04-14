@@ -123,59 +123,64 @@ class _DetectionPageState extends State<DetectionPage> {
   // }
 
   void runModel(File imageFile) {
-  if (_interpreter == null) return;
-  var input = preprocess(imageFile);
-  
-  // YOLO26 End-to-End shape: [1, 300, 6]
-  var output = List.generate(1, (_) => 
-                 List.generate(300, (_) => 
-                   List.filled(6, 0.0)));
+    if (_interpreter == null) return;
+    var input = preprocess(imageFile);
 
-  _interpreter!.run(input.reshape([1, 640, 640, 3]), output);
+    // YOLO26 End-to-End shape: [1, 300, 6]
+    var output = List.generate(
+      1,
+      (_) => List.generate(300, (_) => List.filled(6, 0.0)),
+    );
 
-  List<Detection> results = [];
-  
-  for (int i = 0; i < 300; i++) {
-    double confidence = output[0][i][4];
-    int classIndex = output[0][i][5].toInt();
+    _interpreter!.run(input.reshape([1, 640, 640, 3]), output);
 
-    // Inside the for loop in runModel
-    if (confidence > confThreshold) {
-      print("DEBUG: Found ${labels[classIndex]} with $confidence confidence");
-      // ... rest of your results.add logic
+    List<Detection> results = [];
+
+    for (int i = 0; i < 300; i++) {
+      double confidence = output[0][i][4];
+      int classIndex = output[0][i][5].toInt();
+
+      // Inside the for loop in runModel
+      if (confidence > confThreshold) {
+        print("DEBUG: Found ${labels[classIndex]} with $confidence confidence");
+        
+        // ... rest of your results.add logic
+      }
+
+      if (confidence > confThreshold) {
+        // YOLO26 natively uses x1, y1, x2, y2 (normalized 0-640)
+        double x1 = output[0][i][0];
+        double y1 = output[0][i][1];
+        double x2 = output[0][i][2];
+        double y2 = output[0][i][3];
+
+        print("RAW BOX: x1=$x1 y1=$y1 x2=$x2 y2=$y2");
+        // Convert to original image scale
+        double finalX1 = x1 * originalWidth;
+        double finalY1 = y1 * originalHeight;
+        double finalW = (x2 - x1) * originalWidth;
+        double finalH = (y2 - y1) * originalHeight;
+        print("FINAL BOX: x=$finalX1 y=$finalY1 w=$finalW h=$finalH");
+
+        results.add(
+          Detection(
+            x:
+                finalX1 , // Adjust based on your Detection class needs
+            y: finalY1 ,
+            w: finalW,
+            h: finalH,
+            confidence: confidence,
+            classIndex: classIndex,
+          ),
+        );
+      }
     }
 
-
-    if (confidence > confThreshold) {
-      // YOLO26 natively uses x1, y1, x2, y2 (normalized 0-640)
-      double x1 = output[0][i][0];
-      double y1 = output[0][i][1];
-      double x2 = output[0][i][2];
-      double y2 = output[0][i][3];
-
-      // Convert to original image scale
-      double finalX1 = x1 * (originalWidth / 640);
-      double finalY1 = y1 * (originalHeight / 640);
-      double finalW = (x2 - x1) * (originalWidth / 640);
-      double finalH = (y2 - y1) * (originalHeight / 640);
-
-      results.add(Detection(
-        x: finalX1 + (finalW / 2), // Adjust based on your Detection class needs
-        y: finalY1 + (finalH / 2),
-        w: finalW,
-        h: finalH,
-        confidence: confidence,
-        classIndex: classIndex,
-      ));
-    }
+    setState(() {
+      // Note: YOLO26 is NMS-free, so you might not even need nonMaxSuppression()
+      detections = results;
+    });
   }
-  
-  setState(() {
-    // Note: YOLO26 is NMS-free, so you might not even need nonMaxSuppression()
-    detections = results; 
-  });
-}
-
 
   List<Detection> nonMaxSuppression(List<Detection> boxes) {
     boxes.sort((a, b) => b.confidence.compareTo(a.confidence));
@@ -276,17 +281,13 @@ class _DetectionPageState extends State<DetectionPage> {
                           double scaleY = displayHeight / originalHeight;
                           return Stack(
                             children: [
+                              // 1. Draw Image First (Background)
                               Center(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Image.file(
-                                    _image!,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
+                                child: Image.file(_image!, fit: BoxFit.contain),
                               ),
-                              ...detections.map((d) {
-                                return Positioned(
+                              // 2. Draw Bounding Boxes Second (Foreground)
+                              ...detections.map(
+                                (d) => Positioned(
                                   left: d.left * scaleX + offsetX,
                                   top: d.top * scaleY + offsetY,
                                   width: d.w * scaleX,
@@ -294,28 +295,21 @@ class _DetectionPageState extends State<DetectionPage> {
                                   child: Container(
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                        color: Colors.greenAccent,
+                                        color: Colors.red,
                                         width: 3,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
+                                      ), // Make it thick & bright
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
-                                    child: Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Container(
-                                        color: Colors.greenAccent,
-                                        padding: const EdgeInsets.all(3),
-                                        child: Text(
-                                          "${labels[d.classIndex]} ${(d.confidence * 100).toStringAsFixed(1)}%",
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 12,
-                                          ),
-                                        ),
+                                    child: Text(
+                                      "${labels[d.classIndex]} ${(d.confidence * 100).toStringAsFixed(0)}%",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        backgroundColor: Colors.red,
                                       ),
                                     ),
                                   ),
-                                );
-                              }).toList(),
+                                ),
+                              ),
                             ],
                           );
                         },
@@ -340,8 +334,8 @@ class Detection {
     required this.confidence,
     required this.classIndex,
   });
-  double get left => x - w / 2;
-  double get top => y - h / 2;
+  double get left => x;
+  double get top => y ;
   double get right => x + w / 2;
   double get bottom => y + h / 2;
   double get area => w * h;
