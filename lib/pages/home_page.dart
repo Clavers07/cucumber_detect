@@ -1,78 +1,39 @@
 import 'package:flutter/material.dart';
-import 'search_page.dart';
+import 'dart:ui';
+import 'info_page.dart';
 import 'detection_page.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  late AnimationController controller;
-  late Animation<double> fadeAnimation;
-  late Animation<double> scaleAnimation;
-  @override
-  void initState() {
-    super.initState();
-    controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    fadeAnimation = Tween<double>(begin: 0, end: 1).animate(controller);
-    scaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(controller);
-    controller.forward();
-  }
-
-  Widget menuCard(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-    Widget page,
-  ) {
-    return FadeTransition(
-      opacity: fadeAnimation,
-      child: ScaleTransition(
-        scale: scaleAnimation,
+  Widget glassMenuCard(BuildContext context, String title, IconData icon, Color color, Widget page) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: GestureDetector(
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => page));
-          },
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
               gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.7)],
+                colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.05)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 50, color: color),
+                const SizedBox(height: 15),
+                Text(
+                  title,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                 ),
               ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(25),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 70, color: Colors.white),
-                  const SizedBox(height: 20),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -84,33 +45,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xff1f1c2c), Color(0xff928dab)],
+            colors: [Color(0xff0f172a), Color(0xff334155), Color(0xff1e293b)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(25),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
-                const Text(
-                  "AI Sign Language",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Penerjemah Bahasa Isyarat Berbasis AI",
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
-                ),
+                const Text("AI Cucumber", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                const Text("Pendeteksi buah timun", style: TextStyle(fontSize: 16, color: Colors.white70)),
                 const SizedBox(height: 40),
                 Expanded(
                   child: GridView.count(
@@ -118,20 +68,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     crossAxisSpacing: 20,
                     mainAxisSpacing: 20,
                     children: [
-                      menuCard(
-                        context,
-                        "Cari",
-                        Icons.search,
-                        const Color(0xff4facfe),
-                        const SearchPage(),
-                      ),
-                      menuCard(
-                        context,
-                        "Deteksi",
-                        Icons.camera_alt,
-                        const Color(0xff43e97b),
-                        const DetectionPage(),
-                      ),
+                      glassMenuCard(context, "Daftar Kelas", Icons.menu_book, Colors.cyanAccent, const InfoPage()),
+                      glassMenuCard(context, "Deteksi Kamera", Icons.camera_enhance, Colors.greenAccent, const DetectionPage()),
                     ],
                   ),
                 ),
