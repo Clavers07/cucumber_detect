@@ -16,7 +16,14 @@ class InfoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(title: const Text("Katalog Isyarat"), backgroundColor: Colors.transparent, elevation: 0),
+      // appBar: AppBar(title: const Text("Katalog Isyarat"), backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        title: const Text("Daftar Kelas"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(colors: [Color(0xff0f172a), Color(0xff1e293b)]),
