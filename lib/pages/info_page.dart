@@ -5,15 +5,19 @@ class InfoPage extends StatelessWidget {
   const InfoPage({super.key});
 
   final List<Map<String, String>> signList = const [
-    {"label": "Cucumber",
-    "desc": "Fresh, healthy cucumber fruit"},
+    {"label": "Batang Sawit Sehat", "desc": "-"},
+    {"label": "Buah Sawit Sehat", "desc": "-"},
+    {"label": "Busuk Pucuk", "desc": "-"},
+    {"label": "Daun Sehat", "desc": "-"},
+    {"label": "Hama Tikus", "desc": "-"},
+    {"label": "Jamur Ganoderma", "desc": "-"},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(title: const Text("Katalog Isyarat"), backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(title: const Text("Katalog Penyakit"), backgroundColor: Colors.transparent, elevation: 0),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(colors: [Color(0xff0f172a), Color(0xff1e293b)]),

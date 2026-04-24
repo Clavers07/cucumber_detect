@@ -64,49 +64,115 @@ class _DetectionPageState extends State<DetectionPage> {
   }
 
   void runModel(File imageFile) {
+    print("🚀 RUN MODEL CALLED");
+    print("🧠 INPUT SHAPE: ${_interpreter!.getInputTensor(0).shape}");
+    print("🧠 OUTPUT SHAPE: ${_interpreter!.getOutputTensor(0).shape}");
+    print("🧠 OUTPUT TYPE: ${_interpreter!.getOutputTensor(0).type}");
     if (_interpreter == null) return;
     var input = preprocess(imageFile);
 
     // YOLO26 End-to-End shape: [1, 300, 6]
     var output = List.generate(
       1,
-      (_) => List.generate(300, (_) => List.filled(6, 0.0)),
+      (_) => List.generate(10, (_) => List.filled(8400, 0.0)),
     );
 
     _interpreter!.run(input.reshape([1, 640, 640, 3]), output);
 
     List<Detection> results = [];
 
-    for (int i = 0; i < 300; i++) {
-      double confidence = output[0][i][4];
-      int classIndex = output[0][i][5].toInt();
+    // for (int i = 0; i < 300; i++) {
+    //   double confidence = output[0][i][4];
+    //   int classIndex = output[0][i][5].toInt();
+
+    //   if (confidence > confThreshold) {
+    //     // YOLO26 natively uses x1, y1, x2, y2 (normalized 0-640)
+    //     double x1 = output[0][i][0];
+    //     double y1 = output[0][i][1];
+    //     double x2 = output[0][i][2];
+    //     double y2 = output[0][i][3];
+
+    //     // Convert to original image scale
+    //     double finalX1 = x1 * originalWidth;
+    //     double finalY1 = y1 * originalHeight;
+    //     double finalW = (x2 - x1) * originalWidth;
+    //     double finalH = (y2 - y1) * originalHeight;
+
+    //     results.add(
+    //       Detection(
+    //         x: finalX1, 
+    //         y: finalY1,
+    //         w: finalW,
+    //         h: finalH,
+    //         confidence: confidence,
+    //         classIndex: classIndex,
+    //       ),
+    //     );
+    //   }
+    // }
+    int rawCount = 0;
+    double maxObj = 0;
+
+    for (int i = 0; i < 8400; i++) {
+      double obj = output[0][4][i];
+      if (obj > 0.01) rawCount++;
+      if (obj > maxObj) maxObj = obj;
+    }
+
+    for (int i = 0; i < 8400; i++) {
+      double obj = output[0][4][i];
+
+      double maxClass = 0;
+      int classIndex = -1;
+
+      for (int c = 0; c < numClasses; c++) {
+        double score = output[0][5 + c][i];
+        if (score > maxClass) {
+          maxClass = score;
+          classIndex = c;
+        }
+      }
+
+      double confidence = obj * maxClass;
 
       if (confidence > confThreshold) {
-        // YOLO26 natively uses x1, y1, x2, y2 (normalized 0-640)
-        double x1 = output[0][i][0];
-        double y1 = output[0][i][1];
-        double x2 = output[0][i][2];
-        double y2 = output[0][i][3];
+        double cx = output[0][0][i];
+        double cy = output[0][1][i];
+        double w = output[0][2][i];
+        double h = output[0][3][i];
 
-        // Convert to original image scale
-        double finalX1 = x1 * originalWidth;
-        double finalY1 = y1 * originalHeight;
-        double finalW = (x2 - x1) * originalWidth;
-        double finalH = (y2 - y1) * originalHeight;
+        /// CHECK NORMALIZATION
+        bool normalized = cx <= 1 && cy <= 1;
+
+        double finalX = normalized ? cx * originalWidth : cx;
+        double finalY = normalized ? cy * originalHeight : cy;
+        double finalW = normalized ? w * originalWidth : w;
+        double finalH = normalized ? h * originalHeight : h;
+
+        /// DEBUG FINAL BBOX
+        if (results.length < 3) {
+          print("📐 FINAL BOX:");
+          print("x=$finalX y=$finalY w=$finalW h=$finalH");
+        }
+
+        // kalau normalized
+        cx *= originalWidth;
+        cy *= originalHeight;
+        w *= originalWidth;
+        h *= originalHeight;
 
         results.add(
           Detection(
-            x: finalX1, 
-            y: finalY1,
-            w: finalW,
-            h: finalH,
+            x: cx,
+            y: cy,
+            w: w,
+            h: h,
             confidence: confidence,
             classIndex: classIndex,
           ),
         );
       }
     }
-
     setState(() {
       detections = results;
     });

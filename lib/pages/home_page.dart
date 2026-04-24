@@ -59,8 +59,8 @@ class HomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("AI Cucumber", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-                const Text("Pendeteksi buah timun", style: TextStyle(fontSize: 16, color: Colors.white70)),
+                const Text("AI Detect", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                const Text("Pendeteksi Penyakit Sawit", style: TextStyle(fontSize: 16, color: Colors.white70)),
                 const SizedBox(height: 40),
                 Expanded(
                   child: GridView.count(
