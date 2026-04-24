@@ -3,9 +3,12 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'dart:ui' as ui;
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 class DetectionPage extends StatefulWidget {
   const DetectionPage({super.key});
@@ -201,6 +204,106 @@ class _DetectionPageState extends State<DetectionPage> {
     return "Terdeteksi: $labelName (${(best.confidence * 100).toStringAsFixed(1)}%)";
   }
 
+  Future<void> saveDetectionResult() async {
+    if (_image == null || detections.isEmpty) {
+      debugPrint("No image or detections to save.");
+      return;
+    }
+
+    try {
+      // Load the original image
+      final img.Image originalImage = img.decodeImage(_image!.readAsBytesSync())!;
+
+      // Create a canvas to draw on
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final Canvas canvas = Canvas(recorder);
+
+      // Draw the original image
+      final ui.Image uiImage = await decodeImageFromList(_image!.readAsBytesSync());
+      canvas.drawImage(uiImage, Offset.zero, Paint());
+
+      // Draw bounding boxes
+      final Paint boxPaint = Paint()
+        ..color = const Color(0xFF00FFFF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0;
+
+      final Paint labelBackground = Paint()
+        ..color = const Color(0xFF00FFFF);
+
+      final TextPainter textPainter = TextPainter(
+        textDirection: TextDirection.ltr,
+      );
+
+      for (final Detection detection in detections) {
+        final Rect rect = Rect.fromLTWH(
+          detection.left,
+          detection.top,
+          detection.w,
+          detection.h,
+        );
+        canvas.drawRect(rect, boxPaint);
+
+        // Draw label
+        final String label = labels.isNotEmpty && detection.classIndex < labels.length
+            ? labels[detection.classIndex]
+            : "Class ${detection.classIndex}";
+
+        textPainter.text = TextSpan(
+          text: "$label ${(detection.confidence * 100).toStringAsFixed(1)}%",
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+        textPainter.layout();
+
+        final double labelX = detection.left;
+        final double labelY = detection.top - textPainter.height - 4;
+
+        canvas.drawRect(
+          Rect.fromLTWH(
+            labelX,
+            labelY,
+            textPainter.width + 8,
+            textPainter.height + 4,
+          ),
+          labelBackground,
+        );
+
+        textPainter.paint(canvas, Offset(labelX + 4, labelY + 2));
+      }
+
+      // Convert canvas to image
+      final ui.Image finalImage = await recorder.endRecording().toImage(
+        originalImage.width,
+        originalImage.height,
+      );
+
+      // Convert image to bytes
+      final ByteData? byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
+
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+      // Save to Downloads folder
+      final directory = await path_provider.getExternalStorageDirectory();
+      if (directory == null) {
+        Fluttertoast.showToast(msg: "Failed to access storage.", toastLength: Toast.LENGTH_SHORT);
+        return;
+      }
+      final String outputPath = '${directory.path}/detection_result.png';
+      final File outputFile = File(outputPath);
+      await outputFile.writeAsBytes(pngBytes);
+
+      Fluttertoast.showToast(msg: "Detection result saved to Downloads.", toastLength: Toast.LENGTH_SHORT);
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Error saving detection result: $e", toastLength: Toast.LENGTH_LONG);
+      debugPrint("Error saving detection result: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -340,18 +443,37 @@ class _DetectionPageState extends State<DetectionPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 30),
-                        ElevatedButton.icon(
-                          onPressed: () => _showPickerOptions(context), 
-                          icon: const Icon(Icons.add_a_photo),
-                          label: const Text("Pilih Gambar"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.15),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            side: BorderSide(color: Colors.white.withOpacity(0.3)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                          ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () => _showPickerOptions(context), 
+                              icon: const Icon(Icons.add_a_photo),
+                              label: const Text("Pilih Gambar"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white.withOpacity(0.15),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            ElevatedButton.icon(
+                              onPressed: detections.isNotEmpty ? saveDetectionResult : null,
+                              icon: const Icon(Icons.save_alt),
+                              label: const Text("Simpan Hasil"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white.withOpacity(0.15),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                              ),
+                            ),
+                          ],
                         )
                       ],
                     ),
