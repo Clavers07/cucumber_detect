@@ -297,7 +297,7 @@ class _DetectionPageState extends State<DetectionPage> {
       final File outputFile = File(outputPath);
       await outputFile.writeAsBytes(pngBytes);
 
-      Fluttertoast.showToast(msg: "Detection result saved to Downloads.", toastLength: Toast.LENGTH_SHORT);
+      Fluttertoast.showToast(msg: "Detection result saved to ${directory.path}.", toastLength: Toast.LENGTH_SHORT);
     } catch (e) {
       Fluttertoast.showToast(msg: "Error saving detection result: $e", toastLength: Toast.LENGTH_LONG);
       debugPrint("Error saving detection result: $e");
