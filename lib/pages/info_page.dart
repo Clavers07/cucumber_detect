@@ -5,8 +5,11 @@ class InfoPage extends StatelessWidget {
   const InfoPage({super.key});
 
   final List<Map<String, String>> signList = const [
-    {"label": "Cucumber",
-    "desc": "Fresh, healthy cucumber fruit"},
+    {"label": "Crack", "desc": "Jalan dengan retakan"},
+    {"label": "Damage", "desc": "Jalan rusak"},
+    {"label": "Pothole", "desc": "Jalan berlubang"},
+    {"label": "Pothole water", "desc": "Jalan berlubang dengan genangan air"},
+    {"label": "Pothole water multi", "desc": "Jalan berlubang-lubang dengan genangan air"},
   ];
 
   @override
