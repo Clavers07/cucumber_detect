@@ -137,10 +137,10 @@ debugPrint('  bbox: cx=${output[0][0][globalAnchor]}, cy=${output[0][1][globalAn
       final bh = output[0][3][i];
 
       raw.add(Detection(
-        x: (cx - bw / 2) / inputSize * originalWidth,
-        y: (cy - bh / 2) / inputSize * originalHeight,
-        w: bw / inputSize * originalWidth,
-        h: bh / inputSize * originalHeight,
+        x: cx - bw / 2,  // normalized 0–1
+        y: cy - bh / 2,
+        w: bw,
+        h: bh,
         confidence: maxScore,
         classIndex:  classIdx,
       ));
@@ -297,8 +297,10 @@ debugPrint('  bbox: cx=${output[0][0][globalAnchor]}, cy=${output[0][1][globalAn
                         return Stack(children: [
                           Center(child: Image.file(_image!, fit: BoxFit.contain)),
                           ...detections.map((d) => Positioned(
-                            left: d.x * sx + ox, top: d.y * sy + oy,
-                            width: d.w * sx,     height: d.h * sy,
+                            left:  d.x * dw + ox,
+                            top:   d.y * dh + oy,
+                            width: d.w * dw,
+                            height: d.h * dh,
                             child: Container(
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.cyanAccent, width: 3),
