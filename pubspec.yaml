@@ -51,6 +51,14 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  sqflite: ^2.3.2             # Database lokal
+  path_provider: ^2.1.2       # Mendapatkan path direktori lokal untuk SQLite
+  path: ^1.9.0                # Manipulasi path file
+  flutter_bloc: ^8.1.5        # State management
+  equatable: ^2.0.5           # Komparasi objek untuk BLoC
+  go_router: ^13.2.0          # Navigasi
+  google_fonts: ^6.2.1        # Font Poppi
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

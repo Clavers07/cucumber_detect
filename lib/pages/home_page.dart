@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'info_page.dart';
 import 'detection_page.dart';
+import '../features/home/pages/home_page.dart' as new_home;
+import '../features/detection/pages/detection_page.dart' as new_detection;
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -70,6 +72,8 @@ class HomePage extends StatelessWidget {
                     children: [
                       glassMenuCard(context, "Daftar Kelas", Icons.menu_book, Colors.cyanAccent, const InfoPage()),
                       glassMenuCard(context, "Deteksi Kamera", Icons.camera_enhance, Colors.greenAccent, const DetectionPage()),
+                      glassMenuCard(context, "New Home", Icons.home, Colors.greenAccent, const new_home.HomePage()),
+                      // glassMenuCard(context, "New Camera", Icons.camera, Colors.greenAccent, const new_detection.DetectionPage()),
                     ],
                   ),
                 ),
