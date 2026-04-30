@@ -8,6 +8,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/bounding_box_overlay.dart';
 import '../bloc/detection_cubit.dart';
 import '../bloc/detection_state.dart';
+import '../../../data/models/detection_models.dart';
 
 class DetectionPage extends StatelessWidget {
   const DetectionPage({super.key});
@@ -71,21 +72,29 @@ class DetectionPage extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Expanded(
-                  child: AppCard(
-                    padding: EdgeInsets.zero,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                AppCard(
+                  padding: EdgeInsets.zero,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: ConstrainedBox(
+                      // Membatasi tinggi gambar agar tidak terlalu besar dan proporsional
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.45,
+                        minHeight: 250,
+                        minWidth: double.infinity,
+                      ),
                       child: _buildImageSection(context, state),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 _buildActionSection(context, state),
+                // Spacing ekstra di bawah agar tidak tertutup floating action button
+                const SizedBox(height: 100),
               ],
             ),
           );
@@ -105,6 +114,7 @@ class DetectionPage extends StatelessWidget {
     if (state is DetectionLoading) {
       return Container(
         color: AppColors.surface,
+        width: double.infinity,
         child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -117,7 +127,6 @@ class DetectionPage extends StatelessWidget {
         ),
       );
     } else if (state is DetectionSuccess) {
-      // Decode image dimensions to accurately draw bounding boxes
       return FutureBuilder<ImageInfo>(
         future: _getImageInfo(state.image),
         builder: (context, snapshot) {
@@ -128,8 +137,7 @@ class DetectionPage extends StatelessWidget {
             detections: state.detections,
             originalWidth: snapshot.data!.image.width.toDouble(),
             originalHeight: snapshot.data!.image.height.toDouble(),
-            // TODO: Inject labels dari ML Service, sementara kosong/hardcoded
-            labels: const ['Healthy', 'Disease A', 'Disease B', 'Disease C', 'Disease D', 'Disease E'],
+            labels: state.labels,
           );
         },
       );
@@ -137,6 +145,7 @@ class DetectionPage extends StatelessWidget {
 
     return Container(
       color: Colors.grey[200],
+      width: double.infinity,
       child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -152,36 +161,137 @@ class DetectionPage extends StatelessWidget {
 
   Widget _buildActionSection(BuildContext context, DetectionState state) {
     if (state is DetectionSuccess) {
-      return AppCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Hasil Deteksi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              state.detections.isEmpty 
-                  ? 'Tidak ada objek yang terdeteksi.'
-                  : 'Ditemukan ${state.detections.length} objek. Waktu inferensi: ${state.inferenceTime} ms',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            // Disini bisa ditambahkan navigasi ke ResultPage secara spesifik
-          ],
-        ),
+      return _DetectionResultTabs(
+        detections: state.detections, 
+        labels: state.labels,
       );
     }
     return const SizedBox.shrink();
   }
 
-  // Helper untuk mendapatkan dimensi asli gambar tanpa memblokir UI
   Future<ImageInfo> _getImageInfo(File file) async {
     final Completer<ImageInfo> completer = Completer();
     final ImageStream stream = FileImage(file).resolve(const ImageConfiguration());
     stream.addListener(ImageStreamListener((ImageInfo info, bool _) {
-      completer.complete(info);
+      if (!completer.isCompleted) completer.complete(info);
     }));
     return completer.future;
+  }
+}
+
+class _DetectionResultTabs extends StatefulWidget {
+  final List<DetectionBox> detections;
+  final List<String> labels;
+
+  const _DetectionResultTabs({
+    required this.detections,
+    required this.labels,
+  });
+
+  @override
+  State<_DetectionResultTabs> createState() => _DetectionResultTabsState();
+}
+
+class _DetectionResultTabsState extends State<_DetectionResultTabs> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late Map<String, List<DetectionBox>> _grouped;
+  late List<String> _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _groupDetections();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+  }
+
+  @override
+  void didUpdateWidget(covariant _DetectionResultTabs oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.detections != widget.detections) {
+      _groupDetections();
+      _tabController.dispose();
+      _tabController = TabController(length: _tabs.length, vsync: this);
+    }
+  }
+
+  void _groupDetections() {
+    _grouped = {};
+    for (var d in widget.detections) {
+      final className = widget.labels.isNotEmpty && d.classIndex < widget.labels.length 
+          ? widget.labels[d.classIndex] 
+          : 'Class ${d.classIndex}';
+      if (!_grouped.containsKey(className)) {
+        _grouped[className] = [];
+      }
+      _grouped[className]!.add(d);
+    }
+    _tabs = _grouped.keys.toList();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_tabs.isEmpty) {
+      return AppCard(
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text('Tidak ada objek yang terdeteksi.', style: TextStyle(color: AppColors.textSecondary)),
+        ),
+      );
+    }
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Hasil Deteksi (${widget.detections.length} objek)',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: AppColors.primary,
+            tabs: _tabs.map((t) => Tab(text: '$t (${_grouped[t]!.length})')).toList(),
+          ),
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              if (_tabs.isEmpty) return const SizedBox.shrink();
+              final selectedTab = _tabs[_tabController.index];
+              final items = _grouped[selectedTab]!;
+              
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(), // Scroll mengikuti SingleChildScrollView parent
+                padding: const EdgeInsets.all(16),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final d = items[index];
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.crop_free, color: AppColors.secondary),
+                    title: Text('Confidence: ${(d.confidence * 100).toStringAsFixed(1)}%'),
+                    subtitle: Text('Posisi: x=${d.x.toStringAsFixed(2)}, y=${d.y.toStringAsFixed(2)}'),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

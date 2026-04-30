@@ -23,15 +23,17 @@ class DetectionSuccess extends DetectionState {
   final File image;
   final List<DetectionBox> detections;
   final int inferenceTime;
+  final List<String> labels;
 
   const DetectionSuccess({
     required this.image,
     required this.detections,
     required this.inferenceTime,
+    required this.labels,
   });
 
   @override
-  List<Object?> get props => [image, detections, inferenceTime];
+  List<Object?> get props => [image, detections, inferenceTime, labels];
 }
 
 class DetectionError extends DetectionState {

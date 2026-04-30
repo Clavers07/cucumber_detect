@@ -64,6 +64,7 @@ class DetectionCubit extends Cubit<DetectionState> {
         image: imageFile,
         detections: detections,
         inferenceTime: inferenceTime,
+        labels: _mlService.labels,
       ));
 
     } catch (e) {

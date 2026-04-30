@@ -3,4 +3,4 @@ Buah_sawit_sehat
 Busuk_Pucuk
 Daun_Sehat
 Hama_Tikus
-Jamur_Ganoderma
+Jamur Ganoderma

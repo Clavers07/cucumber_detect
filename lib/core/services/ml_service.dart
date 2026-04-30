@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import '../../data/models/detection_models.dart';
@@ -18,6 +19,17 @@ class MLService {
 
   Future<void> init() async {
     await _loadModel();
+    await _loadLabels();
+  }
+
+  Future<void> _loadLabels() async {
+    try {
+      final labelsData = await rootBundle.loadString('assets/labels.txt');
+      labels = labelsData.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      debugPrint('✅ MLService: Labels loaded (${labels.length} classes)');
+    } catch (e) {
+      debugPrint('❌ MLService Error: Gagal memuat labels.txt - $e');
+    }
   }
 
   Future<void> _loadModel() async {
