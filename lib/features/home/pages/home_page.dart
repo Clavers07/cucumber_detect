@@ -1,9 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/services/ml_service.dart';
+import '../../detection/pages/detection_page.dart';
+import '../../detection/bloc/detection_cubit.dart';
+import '../../history/pages/history_page.dart';
+import '../../history/bloc/history_cubit.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -126,7 +131,21 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     ElevatedButton.icon(
-                      onPressed: () => context.push(AppRoutes.detection),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BlocProvider(
+                              create: (_) {
+                                final mlService = MLService();
+                                mlService.init(); // Inisialisasi TFLite model
+                                return DetectionCubit(mlService);
+                              },
+                              child: const DetectionPage(),
+                            ),
+                          ),
+                        );
+                      },
                       icon: const Icon(Icons.camera_alt, color: AppColors.primary),
                       label: const Text('Mulai Deteksi', style: TextStyle(color: AppColors.primary)),
                       style: ElevatedButton.styleFrom(
@@ -155,7 +174,17 @@ class HomePage extends StatelessWidget {
       children: [
         Expanded(
           child: GestureDetector(
-            onTap: () => context.push(AppRoutes.history),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => HistoryCubit(),
+                    child: const HistoryPage(),
+                  ),
+                ),
+              );
+            },
             child: AppCard(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
