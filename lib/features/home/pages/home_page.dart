@@ -9,6 +9,7 @@ import '../../detection/pages/detection_page.dart';
 import '../../detection/bloc/detection_cubit.dart';
 import '../../history/pages/history_page.dart';
 import '../../history/bloc/history_cubit.dart';
+import '../../dictionary/pages/dictionary_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -79,11 +80,11 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-        const CircleAvatar(
-          backgroundColor: AppColors.primary,
-          radius: 24,
-          child: Icon(Icons.person, color: Colors.white),
-        ),
+        // const CircleAvatar(
+        //   backgroundColor: AppColors.primary,
+        //   radius: 24,
+        //   child: Icon(Icons.person, color: Colors.white),
+        // ),
       ],
     );
   }
@@ -198,7 +199,7 @@ class HomePage extends StatelessWidget {
                     child: const Icon(Icons.history, color: AppColors.secondary, size: 32),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  const Text('Riwayat', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Riwayat Deteksi', style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -208,9 +209,11 @@ class HomePage extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: () {
-              // TODO: Navigasi ke Halaman Info Penyakit (Tahap 4)
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Kamus Penyakit segera hadir!')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DictionaryPage(),
+                ),
               );
             },
             child: AppCard(
@@ -226,7 +229,7 @@ class HomePage extends StatelessWidget {
                     child: const Icon(Icons.menu_book, color: AppColors.primary, size: 32),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  const Text('Kamus', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Kamus Data', style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

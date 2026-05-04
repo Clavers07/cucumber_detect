@@ -1,0 +1,97 @@
+[
+  {
+    "id": "batang_sawit_sehat",
+    "nama": "Batang Sawit Sehat",
+    "nama_latin": "Elaeis guineensis",
+    "kategori": "Batang",
+    "deskripsi": "Kondisi batang kelapa sawit yang sehat, tumbuh dengan baik tanpa adanya tanda-tanda pembusukan atau serangan hama penyakit.",
+    "ciri_ciri": [
+      "Warna batang normal",
+      "Tidak ada lubang bekas hama",
+      "Tidak ada jamur yang tumbuh di pangkal atau badan batang",
+      "Pertumbuhan meninggi stabil"
+    ],
+    "penyebab": "Perawatan yang baik dan kondisi lingkungan yang mendukung.",
+    "penanganan": "Lanjutkan perawatan rutin seperti pemupukan dan pembersihan area sekitar pohon.",
+    "pencegahan": "Menjaga sanitasi kebun dan melakukan pengecekan rutin dari serangan hama penyakit."
+  },
+  {
+    "id": "buah_sawit_sehat",
+    "nama": "Buah Sawit Sehat",
+    "nama_latin": "Elaeis guineensis",
+    "kategori": "Buah",
+    "deskripsi": "Tandan buah segar (TBS) kelapa sawit yang matang sempurna dan bebas dari hama atau penyakit, memiliki kandungan minyak yang optimal.",
+    "ciri_ciri": [
+      "Warna buah cerah kehitaman hingga merah jingga (matang)",
+      "Bentuk buah penuh dan tidak keriput",
+      "Tandan buah rapat",
+      "Tidak ada tanda-tanda busuk atau bekas gigitan hama"
+    ],
+    "penyebab": "Penyerbukan yang sukses, nutrisi yang cukup, dan bebas dari hama.",
+    "penanganan": "Panen buah pada waktu yang tepat (fraksi matang panen).",
+    "pencegahan": "Pastikan kecukupan unsur hara, terutama kalium, serta lakukan pengendalian gulma."
+  },
+  {
+    "id": "busuk_pucuk",
+    "nama": "Busuk Pucuk",
+    "nama_latin": "Phytophthora palmivora",
+    "kategori": "Daun",
+    "deskripsi": "Penyakit yang menyerang bagian pucuk (titik tumbuh) kelapa sawit, menyebabkan pucuk membusuk, layu, dan akhirnya mati.",
+    "ciri_ciri": [
+      "Daun muda atau tombak belum membuka yang membusuk",
+      "Berbau busuk menyengat",
+      "Pucuk mudah dicabut",
+      "Daun yang baru muncul berwarna kecokelatan atau hitam"
+    ],
+    "penyebab": "Infeksi jamur Phytophthora palmivora yang sering terjadi pada kondisi lembab atau drainase yang buruk.",
+    "penanganan": "Potong bagian yang busuk sampai terlihat jaringan sehat, lalu olesi dengan fungisida tembaga atau nabati.",
+    "pencegahan": "Perbaiki drainase kebun agar tidak tergenang, lakukan penjarangan tajuk untuk mengurangi kelembaban berlebih."
+  },
+  {
+    "id": "daun_sehat",
+    "nama": "Daun Sehat",
+    "nama_latin": "Elaeis guineensis",
+    "kategori": "Daun",
+    "deskripsi": "Pelepah dan daun kelapa sawit yang berwarna hijau gelap, menandakan proses fotosintesis berjalan dengan maksimal.",
+    "ciri_ciri": [
+      "Daun berwarna hijau tua",
+      "Anak daun membuka sempurna",
+      "Pelepah tidak mudah patah",
+      "Tidak ada bercak kuning, oranye, atau nekrosis"
+    ],
+    "penyebab": "Nutrisi nitrogen dan magnesium yang tercukupi dengan baik.",
+    "penanganan": "Lanjutkan penyusunan pelepah (pruning) sesuai standar agronomi.",
+    "pencegahan": "Berikan pupuk makro dan mikro secara seimbang sesuai anjuran dan umur tanaman."
+  },
+  {
+    "id": "hama_tikus",
+    "nama": "Hama Tikus",
+    "nama_latin": "Rattus tiomanicus",
+    "kategori": "Buah",
+    "deskripsi": "Serangan tikus pohon yang memakan bunga dan buah kelapa sawit, menyebabkan penurunan produksi secara drastis.",
+    "ciri_ciri": [
+      "Terdapat bekas gigitan (keratan) pada buah sawit yang masih di tandan",
+      "Banyak brondolan buah berserakan dengan bekas gigitan",
+      "Ditemukan sarang tikus di sela-sela pelepah atau pangkal batang"
+    ],
+    "penyebab": "Populasi tikus yang tinggi akibat kurangnya predator alami (seperti burung hantu) dan sanitasi kebun yang buruk.",
+    "penanganan": "Penggunaan rodentisida (racun tikus) seperti klerat atau penyediaan umpan beracun secara terkendali.",
+    "pencegahan": "Kembangbiakkan burung hantu (Tyto alba) sebagai predator alami dengan membangun pagupon di kebun."
+  },
+  {
+    "id": "jamur_ganoderma",
+    "nama": "Jamur Ganoderma (Busuk Pangkal Batang)",
+    "nama_latin": "Ganoderma boninense",
+    "kategori": "Batang",
+    "deskripsi": "Penyakit mematikan pada kelapa sawit yang menyebabkan busuk pada pangkal batang sehingga aliran nutrisi terputus dan pohon tumbang.",
+    "ciri_ciri": [
+      "Munculnya badan buah jamur berbentuk seperti kipas di pangkal batang",
+      "Beberapa pelepah bawah layu dan menggantung (seperti rok)",
+      "Pucuk daun muda (tombak) tidak membuka (lebih dari 3 tombak)",
+      "Batang keropos bila ditekan atau diketok"
+    ],
+    "penyebab": "Infeksi patogen tular tanah Ganoderma boninense yang menular melalui kontak akar dari tunggul yang terinfeksi sebelumnya.",
+    "penanganan": "Membongkar tanaman yang terserang parah beserta akarnya, lalu dicacah agar cepat lapuk, atau membuat parit isolasi.",
+    "pencegahan": "Aplikasi agen hayati Trichoderma pada bibit dan lubang tanam, serta sanitasi sisa batang saat peremajaan kebun (replanting)."
+  }
+]

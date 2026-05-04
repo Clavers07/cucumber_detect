@@ -1,6 +1,6 @@
-Batang_Sawit_sehat
-Buah_sawit_sehat
-Busuk_Pucuk
-Daun_Sehat
-Hama_Tikus
+Batang Sawit Sehat
+Buah Sawit Sehat
+Busuk Pucuk
+Daun Sehat
+Hama Tikus
 Jamur Ganoderma
