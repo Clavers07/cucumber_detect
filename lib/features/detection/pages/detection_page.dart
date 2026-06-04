@@ -192,7 +192,7 @@ class _DetectionResultTabs extends StatefulWidget {
   State<_DetectionResultTabs> createState() => _DetectionResultTabsState();
 }
 
-class _DetectionResultTabsState extends State<_DetectionResultTabs> with SingleTickerProviderStateMixin {
+class _DetectionResultTabsState extends State<_DetectionResultTabs> with TickerProviderStateMixin {
   late TabController _tabController;
   late Map<String, List<DetectionBox>> _grouped;
   late List<String> _tabs;
