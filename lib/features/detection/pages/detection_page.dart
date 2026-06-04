@@ -9,6 +9,9 @@ import '../../../core/widgets/bounding_box_overlay.dart';
 import '../bloc/detection_cubit.dart';
 import '../bloc/detection_state.dart';
 import '../../../data/models/detection_models.dart';
+import '../../dictionary/models/disease_model.dart';
+import '../../dictionary/services/dictionary_service.dart';
+import '../../dictionary/pages/disease_detail_page.dart';
 
 class DetectionPage extends StatelessWidget {
   const DetectionPage({super.key});
@@ -261,12 +264,24 @@ class _DetectionResultTabsState extends State<_DetectionResultTabs> with TickerP
   late TabController _tabController;
   late Map<String, List<DetectionBox>> _grouped;
   late List<String> _tabs;
+  final DictionaryService _dictionaryService = DictionaryService();
+  List<DiseaseModel> _diseases = [];
 
   @override
   void initState() {
     super.initState();
     _groupDetections();
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _loadDiseases();
+  }
+
+  Future<void> _loadDiseases() async {
+    final data = await _dictionaryService.loadDiseases();
+    if (mounted) {
+      setState(() {
+        _diseases = data;
+      });
+    }
   }
 
   @override
@@ -338,20 +353,60 @@ class _DetectionResultTabsState extends State<_DetectionResultTabs> with TickerP
               final selectedTab = _tabs[_tabController.index];
               final items = _grouped[selectedTab]!;
               
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(), // Scroll mengikuti SingleChildScrollView parent
-                padding: const EdgeInsets.all(16),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final d = items[index];
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.crop_free, color: AppColors.secondary),
-                    title: Text('Confidence: ${(d.confidence * 100).toStringAsFixed(1)}%'),
-                    subtitle: Text('Posisi: x=${d.x.toStringAsFixed(2)}, y=${d.y.toStringAsFixed(2)}'),
-                  );
-                },
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_diseases.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0, right: 16.0, left: 16.0, bottom: 8.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          final targetId = selectedTab.toLowerCase().replaceAll(' ', '_');
+                          final index = _diseases.indexWhere((d) => d.id == targetId);
+                          if (index != -1) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DiseaseDetailPage(disease: _diseases[index]),
+                              ),
+                            );
+                          }
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Text(
+                              'Lihat Detail',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.blue,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(Icons.arrow_outward, size: 16, color: Colors.blue),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(), // Scroll mengikuti SingleChildScrollView parent
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final d = items[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.crop_free, color: AppColors.secondary),
+                        title: Text('Confidence: ${(d.confidence * 100).toStringAsFixed(1)}%'),
+                        subtitle: Text('Posisi: x=${d.x.toStringAsFixed(2)}, y=${d.y.toStringAsFixed(2)}'),
+                      );
+                    },
+                  ),
+                ],
               );
             },
           ),
