@@ -113,16 +113,26 @@ class DetectionPage extends StatelessWidget {
   Widget _buildImageSection(BuildContext context, DetectionState state) {
     if (state is DetectionLoading) {
       return Container(
-        color: AppColors.surface,
+        color: Colors.grey[100],
         width: double.infinity,
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: AppColors.primary),
-              SizedBox(height: 16),
-              Text('AI Sedang Menganalisis...'),
-            ],
+        child: Center(
+          child: _SkeletonLoader(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.document_scanner, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+                  width: 150, height: 16, 
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+                  width: 100, height: 12, 
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -160,6 +170,61 @@ class DetectionPage extends StatelessWidget {
   }
 
   Widget _buildActionSection(BuildContext context, DetectionState state) {
+    if (state is DetectionLoading) {
+      return AppCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Menganalisis Objek...',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const LinearProgressIndicator(color: AppColors.primary),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _SkeletonLoader(
+                child: Column(
+                  children: List.generate(3, (index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24, height: 24, 
+                          decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 120, height: 16, 
+                                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                width: 80, height: 12, 
+                                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (state is DetectionSuccess) {
       return _DetectionResultTabs(
         detections: state.detections, 
@@ -292,6 +357,40 @@ class _DetectionResultTabsState extends State<_DetectionResultTabs> with TickerP
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SkeletonLoader extends StatefulWidget {
+  final Widget child;
+  const _SkeletonLoader({required this.child});
+
+  @override
+  State<_SkeletonLoader> createState() => _SkeletonLoaderState();
+}
+
+class _SkeletonLoaderState extends State<_SkeletonLoader> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.3, end: 0.7).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) => Opacity(opacity: _animation.value, child: widget.child),
     );
   }
 }

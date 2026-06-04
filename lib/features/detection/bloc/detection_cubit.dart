@@ -23,6 +23,10 @@ class DetectionCubit extends Cubit<DetectionState> {
 
       emit(const DetectionLoading('Memproses gambar & AI...'));
       
+      // Beri waktu sebentar agar UI Flutter sempat merender state Loading
+      // sebelum thread terblokir oleh proses inferensi ML.
+      await Future.delayed(const Duration(milliseconds: 100));
+      
       final File imageFile = File(picked.path);
       
       // Catat waktu mulai inferensi
