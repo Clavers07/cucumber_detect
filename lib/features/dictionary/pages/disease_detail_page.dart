@@ -1,12 +1,61 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../models/disease_model.dart';
 
-class DiseaseDetailPage extends StatelessWidget {
+class DiseaseDetailPage extends StatefulWidget {
   final DiseaseModel disease;
 
   const DiseaseDetailPage({super.key, required this.disease});
+
+  @override
+  State<DiseaseDetailPage> createState() => _DiseaseDetailPageState();
+}
+
+class _DiseaseDetailPageState extends State<DiseaseDetailPage> {
+  List<String> _imagePaths = [];
+  final PageController _pageController = PageController();
+  int _currentIndex = 0;
+
+  DiseaseModel get disease => widget.disease;
+
+  @override
+  void initState() {
+    super.initState();
+    _imagePaths = [disease.imagePath];
+    _loadAllImages();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAllImages() async {
+    try {
+      final manifestContent = await rootBundle.loadString('AssetManifest.json');
+      final Map<String, dynamic> manifestMap = json.decode(manifestContent);
+      
+      final regExp = RegExp(
+        r'^assets/images/diseases/' + disease.id + r'(?:_\d+)?\.(jpg|jpeg|png)$',
+        caseSensitive: false,
+      );
+      
+      final paths = manifestMap.keys.where((key) => regExp.hasMatch(key)).toList();
+      paths.sort();
+      
+      if (paths.isNotEmpty && mounted) {
+        setState(() {
+          _imagePaths = paths;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading manifest: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +89,26 @@ class DiseaseDetailPage extends StatelessWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
-                    disease.imagePath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: AppColors.primary.withOpacity(0.5),
-                        child: const Center(
-                          child: Icon(Icons.image_not_supported, size: 60, color: Colors.white54),
-                        ),
+                  PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    },
+                    itemCount: _imagePaths.length,
+                    itemBuilder: (context, index) {
+                      return Image.asset(
+                        _imagePaths[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.primary.withOpacity(0.5),
+                            child: const Center(
+                              child: Icon(Icons.image_not_supported, size: 60, color: Colors.white54),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -65,6 +125,54 @@ class DiseaseDetailPage extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Tombol navigasi Previous
+                  if (_imagePaths.length > 1 && _currentIndex > 0)
+                    Positioned(
+                      left: 16,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.3),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.chevron_left, color: Colors.white, size: 32),
+                            onPressed: () {
+                              _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Tombol navigasi Next
+                  if (_imagePaths.length > 1 && _currentIndex < _imagePaths.length - 1)
+                    Positioned(
+                      right: 16,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.3),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.chevron_right, color: Colors.white, size: 32),
+                            onPressed: () {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -75,6 +183,33 @@ class DiseaseDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (_imagePaths.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_imagePaths.length, (index) {
+                          return GestureDetector(
+                            onTap: () {
+                              _pageController.animateToPage(
+                                index, 
+                                duration: const Duration(milliseconds: 300), 
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: _currentIndex == index ? 24 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: _currentIndex == index ? AppColors.primary : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
                   _buildHeaderInfo(),
                   const SizedBox(height: AppSpacing.lg),
                   _buildSection('Deskripsi', disease.deskripsi),
