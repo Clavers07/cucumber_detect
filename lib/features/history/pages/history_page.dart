@@ -125,7 +125,31 @@ class _HistoryPageState extends State<HistoryPage> {
                         icon: const Icon(Icons.delete_outline, color: AppColors.error),
                         onPressed: () {
                           if (entry.id != null) {
-                            context.read<HistoryCubit>().deleteHistory(entry.id!);
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext dialogContext) {
+                                return AlertDialog(
+                                  title: const Text('Hapus Riwayat'),
+                                  content: const Text('Apakah Anda yakin ingin menghapus data riwayat ini?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(dialogContext).pop(),
+                                      child: const Text('Batal'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(dialogContext).pop();
+                                        context.read<HistoryCubit>().deleteHistory(entry.id!);
+                                      },
+                                      child: const Text(
+                                        'Hapus',
+                                        style: TextStyle(color: AppColors.error),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
                           }
                         },
                       )
