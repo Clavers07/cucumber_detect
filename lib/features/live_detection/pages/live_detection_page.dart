@@ -81,7 +81,7 @@ class _LiveDetectionPageState extends State<LiveDetectionPage> {
           detections: state.currentDetections,
           cameraSize: cameraInputSize,
           screenSize: size,
-          labels: const [], // Labels ditangani di dalam CustomPainter agar lebih cepat, atau kirim jika perlu
+          labels: context.read<LiveDetectionCubit>().mlService.labels,
         ),
 
         // UI Tambahan (Back Button & Info)
@@ -168,7 +168,7 @@ class _LiveDetectionPageState extends State<LiveDetectionPage> {
           detections: state.detections,
           cameraSize: cameraInputSize,
           screenSize: size,
-          labels: const [],
+          labels: context.read<LiveDetectionCubit>().mlService.labels,
         ),
 
         // UI Panel Bawah (Glassmorphism effect)

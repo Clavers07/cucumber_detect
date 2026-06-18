@@ -84,11 +84,13 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
           _confThreshold,
         );
 
-        print("✅--- Live AI Check: Ditemukan ${detections.length} objek ---");
-        if (detections.isNotEmpty) {
-          final first = detections.first;
-          print("📦 Sample Box 1: x=${first.x.toStringAsFixed(2)}, y=${first.y.toStringAsFixed(2)}, w=${first.w.toStringAsFixed(2)}, h=${first.h.toStringAsFixed(2)}, conf=${first.confidence.toStringAsFixed(2)}");
-        }
+        // Log Debugging
+
+        // print("✅--- Live AI Check: Ditemukan ${detections.length} objek ---");
+        // if (detections.isNotEmpty) {
+        //   final first = detections.first;
+        //   print("📦 Sample Box 1: x=${first.x.toStringAsFixed(2)}, y=${first.y.toStringAsFixed(2)}, w=${first.w.toStringAsFixed(2)}, h=${first.h.toStringAsFixed(2)}, conf=${first.confidence.toStringAsFixed(2)}");
+        // }
 
         if (state is LiveDetectionActive) {
           emit((state as LiveDetectionActive).copyWith(currentDetections: detections));
