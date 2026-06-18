@@ -74,14 +74,24 @@ class _LiveBoundingBoxPainter extends CustomPainter {
 
       final Rect rect = Rect.fromLTWH(left, top, width, height);
       
-      // Mengubah warna tergantung confidence
-      if (det.confidence > 0.7) {
-        boxPaint.color = Colors.greenAccent;
-        textBgPaint.color = Colors.green.withOpacity(0.8);
-      } else {
-        boxPaint.color = Colors.orangeAccent;
-        textBgPaint.color = Colors.orange.withOpacity(0.8);
-      }
+      // Daftar warna berdasarkan class index
+      final List<Color> classColors = [
+        Colors.redAccent,
+        Colors.blueAccent,
+        Colors.greenAccent,
+        Colors.orangeAccent,
+        Colors.purpleAccent,
+        Colors.cyanAccent,
+        Colors.pinkAccent,
+        Colors.tealAccent,
+        Colors.amberAccent,
+        Colors.indigoAccent,
+      ];
+      
+      final Color baseColor = classColors[det.classIndex % classColors.length];
+      
+      boxPaint.color = baseColor;
+      textBgPaint.color = baseColor.withOpacity(0.8);
 
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(8)),

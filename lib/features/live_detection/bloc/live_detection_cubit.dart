@@ -109,8 +109,22 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
     try {
       emit(LiveDetectionLoading());
       
-      // Hentikan stream (freeze)
+      // Cegah frame baru dari stream diproses
+      final tempInterpreter = _interpreter;
+      _interpreter = null;
+
+      // KRITIS: Tunggu Isolate selesai membaca buffer YUV di memori Native.
+      // Jika kita stopImageStream sekarang, buffer kamera akan dihapus oleh OS, 
+      // dan Isolate akan crash (SIGSEGV) karena membaca memori yang sudah hangus.
+      while (_isProcessing) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      
+      // Hentikan stream (freeze) setelah aman
       await _cameraController!.stopImageStream();
+      
+      // Kembalikan interpreter untuk sesi berikutnya
+      _interpreter = tempInterpreter;
       
       // Tunggu sebentar agar kamera stabil setelah stop stream
       await Future.delayed(const Duration(milliseconds: 300));
@@ -177,21 +191,24 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
 
   @override
   Future<void> close() async {
-    _cameraController?.stopImageStream();
-    _cameraController?.dispose();
-    
-    // Putuskan referensi interpreter agar frame baru yang telat masuk tidak diproses
+    // 1. Putuskan referensi interpreter agar callback stream membuang frame baru
     final interpreterToClose = _interpreter;
     _interpreter = null;
     
-    // Tunggu isolate selesai bekerja sebelum menghancurkan interpreter C++
-    int maxWait = 20; // max 1 detik
-    while (_isProcessing && maxWait > 0) {
+    // 2. KRITIS: Tunggu isolate selesai bekerja. 
+    // Jika kita men-dispose kamera saat Isolate masih membaca buffer YUV (native memory),
+    // aplikasi akan langsung crash (SIGSEGV SEGV_MAPERR) karena OS Android menghancurkan buffer tersebut.
+    while (_isProcessing) {
       await Future.delayed(const Duration(milliseconds: 50));
-      maxWait--;
     }
     
+    // 3. Setelah isolate 100% aman dan selesai, baru kita hancurkan stream, kamera, dan AI.
+    try {
+      await _cameraController?.stopImageStream();
+    } catch (_) {}
+    _cameraController?.dispose();
     interpreterToClose?.close();
+    
     return super.close();
   }
 }

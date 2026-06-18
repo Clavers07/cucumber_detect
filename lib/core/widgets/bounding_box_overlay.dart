@@ -47,6 +47,22 @@ class BoundingBoxOverlay extends StatelessWidget {
                   ? labels[d.classIndex] 
                   : 'Class ${d.classIndex}';
 
+              // Daftar warna berdasarkan class index
+              final List<Color> classColors = [
+                Colors.redAccent,
+                Colors.blueAccent,
+                Colors.greenAccent,
+                Colors.orangeAccent,
+                Colors.purpleAccent,
+                Colors.cyanAccent,
+                Colors.pinkAccent,
+                Colors.tealAccent,
+                Colors.amberAccent,
+                Colors.indigoAccent,
+              ];
+              
+              final Color baseColor = classColors[d.classIndex % classColors.length];
+
               return Positioned(
                 left: d.x * dw + ox,
                 top: d.y * dh + oy,
@@ -54,16 +70,16 @@ class BoundingBoxOverlay extends StatelessWidget {
                 height: d.h * dh,
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.yellowAccent, width: 2.5),
+                    border: Border.all(color: baseColor, width: 2.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Align(
                     alignment: Alignment.topLeft,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: const BoxDecoration(
-                        color: Colors.yellowAccent,
-                        borderRadius: BorderRadius.only(
+                      decoration: BoxDecoration(
+                        color: baseColor.withOpacity(0.8),
+                        borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(5),
                           bottomRight: Radius.circular(8),
                         ),
@@ -71,7 +87,7 @@ class BoundingBoxOverlay extends StatelessWidget {
                       child: Text(
                         '$className ${(d.confidence * 100).toStringAsFixed(0)}%',
                         style: const TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
