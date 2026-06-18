@@ -68,18 +68,22 @@ class MLService {
     if (_interpreter == null) throw Exception('Interpreter is null');
 
     final input = preprocess(imageFile).reshape([1, inputSize, inputSize, 3]);
-    final int rows = 4 + numClasses;
+    final outputShape = _interpreter!.getOutputTensor(0).shape;
+    final int rows = outputShape[1];
+    final int numAnchorsDynamic = outputShape[2];
+    final int numClassesDynamic = rows - 4;
+
     final output = List.generate(
-      1, (_) => List.generate(rows, (_) => List<double>.filled(numAnchors, 0.0))
+      1, (_) => List.generate(rows, (_) => List<double>.filled(numAnchorsDynamic, 0.0))
     );
 
     _interpreter!.run(input, output);
 
     final List<DetectionBox> raw = [];
-    for (int i = 0; i < numAnchors; i++) {
+    for (int i = 0; i < numAnchorsDynamic; i++) {
       double maxScore = 0.0;
       int classIdx = 0;
-      for (int c = 0; c < numClasses; c++) {
+      for (int c = 0; c < numClassesDynamic; c++) {
         final s = output[0][4 + c][i];
         if (s > maxScore) {
           maxScore = s;

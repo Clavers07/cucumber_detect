@@ -10,6 +10,8 @@ import '../../detection/bloc/detection_cubit.dart';
 import '../../history/pages/history_page.dart';
 import '../../history/bloc/history_cubit.dart';
 import '../../dictionary/pages/dictionary_page.dart';
+import '../../live_detection/pages/live_detection_page.dart';
+import '../../live_detection/bloc/live_detection_cubit.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -199,7 +201,7 @@ class HomePage extends StatelessWidget {
                     child: const Icon(Icons.history, color: AppColors.secondary, size: 32),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  const Text('Riwayat Deteksi', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Riwayat Deteksi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
                 ],
               ),
             ),
@@ -229,7 +231,40 @@ class HomePage extends StatelessWidget {
                     child: const Icon(Icons.menu_book, color: AppColors.primary, size: 32),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  const Text('Kamus Data', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Kamus Data', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => LiveDetectionCubit(MLService()),
+                    child: const LiveDetectionPage(),
+                  ),
+                ),
+              );
+            },
+            child: AppCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.videocam, color: Colors.orange, size: 32),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const Text('Live Kamera', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
                 ],
               ),
             ),

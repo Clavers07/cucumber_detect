@@ -75,6 +75,7 @@ flutter:
     - assets/best.tflite
     - assets/best_int8.tflite
     - assets/labels.txt
+    - assets/best_float16.tflite
     - assets/data/
     - assets/images/diseases/
   # To add assets to your application, add an assets section, like this:

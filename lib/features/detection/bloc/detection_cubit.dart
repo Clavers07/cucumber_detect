@@ -21,13 +21,20 @@ class DetectionCubit extends Cubit<DetectionState> {
       final XFile? picked = await _picker.pickImage(source: source);
       if (picked == null) return; // User membatalkan picker
 
+      await detectFromImage(File(picked.path));
+    } catch (e) {
+      emit(DetectionError('Gagal mengambil gambar: $e'));
+    }
+  }
+
+  Future<void> detectFromImage(File imageFile) async {
+    try {
       emit(const DetectionLoading('Memproses gambar & AI...'));
       
       // Beri waktu sebentar agar UI Flutter sempat merender state Loading
       // sebelum thread terblokir oleh proses inferensi ML.
       await Future.delayed(const Duration(milliseconds: 100));
-      
-      final File imageFile = File(picked.path);
+
       
       // Catat waktu mulai inferensi
       final stopwatch = Stopwatch()..start();

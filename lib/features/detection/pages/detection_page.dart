@@ -13,8 +13,27 @@ import '../../dictionary/models/disease_model.dart';
 import '../../dictionary/services/dictionary_service.dart';
 import '../../dictionary/pages/disease_detail_page.dart';
 
-class DetectionPage extends StatelessWidget {
-  const DetectionPage({super.key});
+class DetectionPage extends StatefulWidget {
+  final File? initialImage;
+  
+  const DetectionPage({super.key, this.initialImage});
+
+  @override
+  State<DetectionPage> createState() => _DetectionPageState();
+}
+
+class _DetectionPageState extends State<DetectionPage> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialImage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<DetectionCubit>().detectFromImage(widget.initialImage!);
+        }
+      });
+    }
+  }
 
   void _showPickerOptions(BuildContext context) {
     showModalBottomSheet(
