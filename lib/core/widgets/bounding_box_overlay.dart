@@ -70,29 +70,8 @@ class BoundingBoxOverlay extends StatelessWidget {
                 height: d.h * dh,
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: baseColor, width: 2.5),
+                    border: Border.all(color: baseColor, width: 1.25), // Ketebalan bounding box detection
                     borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: baseColor.withOpacity(0.8),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(5),
-                          bottomRight: Radius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        '$className ${(d.confidence * 100).toStringAsFixed(0)}%',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               );
