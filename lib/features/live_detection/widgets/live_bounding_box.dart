@@ -57,11 +57,20 @@ class _LiveBoundingBoxPainter extends CustomPainter {
       ..color = AppColors.primary.withOpacity(0.8);
 
     for (final det in detections) {
-      // Map coordinate from model input size (640x640) to screen size
-      final double left = det.x * scaleX;
-      final double top = det.y * scaleY;
-      final double width = det.w * scaleX;
-      final double height = det.h * scaleY;
+      // Deteksi jika model mengeluarkan normalized coordinates (0.0 - 1.0)
+      // Jika ya, kita harus mengalikannya dengan ukuran asli input kamera (640x640)
+      final bool isNormalized = det.x <= 2.0 && det.y <= 2.0 && det.w <= 2.0 && det.h <= 2.0;
+      
+      final double actualX = isNormalized ? det.x * cameraSize.width : det.x;
+      final double actualY = isNormalized ? det.y * cameraSize.height : det.y;
+      final double actualW = isNormalized ? det.w * cameraSize.width : det.w;
+      final double actualH = isNormalized ? det.h * cameraSize.height : det.h;
+
+      // Map coordinate dari input size (640x640) ke screen size
+      final double left = actualX * scaleX;
+      final double top = actualY * scaleY;
+      final double width = actualW * scaleX;
+      final double height = actualH * scaleY;
 
       final Rect rect = Rect.fromLTWH(left, top, width, height);
       

@@ -96,18 +96,26 @@ class IsolateInference {
   }
 
   static img.Image? _convertCameraImage(_InferenceModel image) {
-    if (image.formatGroup == ImageFormatGroup.yuv420) {
-      final width = image.width;
-      final height = image.height;
-      final imgData = img.Image(width: width, height: height);
+    if (image.formatGroup == ImageFormatGroup.bgra8888) {
+      return img.Image.fromBytes(
+        width: image.width,
+        height: image.height,
+        bytes: image.planes[0].buffer,
+        order: img.ChannelOrder.bgra,
+      );
+    } else if (image.formatGroup == ImageFormatGroup.yuv420) {
+      // YUV420 Fallback for Android devices that don't support BGRA8888
+      final int width = image.width;
+      final int height = image.height;
+      final img.Image imgData = img.Image(width: width, height: height);
 
       final yBuffer = image.planes[0];
       final uBuffer = image.planes[1];
       final vBuffer = image.planes[2];
 
-      final yRowStride = image.bytesPerRow[0];
-      final uvRowStride = image.bytesPerRow[1];
-      final uvPixelStride = image.bytesPerPixel[1];
+      final int yRowStride = image.bytesPerRow[0];
+      final int uvRowStride = image.bytesPerRow[1];
+      final int uvPixelStride = image.bytesPerPixel[1];
 
       for (int y = 0; y < height; y++) {
         int uvRow = y >> 1;
@@ -117,25 +125,24 @@ class IsolateInference {
           int uvIndex = (uvRow * uvRowStride) + (uvCol * uvPixelStride);
 
           int yp = yBuffer[yIndex];
-          int up = uBuffer[uvIndex] - 128;
-          int vp = vBuffer[uvIndex] - 128;
+          int up = uBuffer[uvIndex];
+          int vp = vBuffer[uvIndex];
 
-          int r = (yp + vp * 1436 / 1024).round().clamp(0, 255);
-          int g = (yp - up * 46549 / 131072 - vp * 93604 / 131072).round().clamp(0, 255);
-          int b = (yp + up * 1814 / 1024).round().clamp(0, 255);
+          // Konversi standar YUV ke RGB
+          int r = (yp + vp * 1436 / 1024 - 179).round().clamp(0, 255);
+          int g = (yp - up * 46549 / 131072 - vp * 93604 / 131072 + 44).round().clamp(0, 255);
+          int b = (yp + up * 1814 / 1024 - 227).round().clamp(0, 255);
 
           imgData.setPixelRgb(x, y, r, g, b);
         }
       }
-      return imgData;
-    } else if (image.formatGroup == ImageFormatGroup.bgra8888) {
-      return img.Image.fromBytes(
-        width: image.width,
-        height: image.height,
-        bytes: image.planes[0].buffer,
-        order: img.ChannelOrder.bgra,
-      );
+      
+      // ROTASI: Sensor kamera Android biasanya landscape (rotasi 90 derajat)
+      // Jika tidak dirotasi, AI akan melihat gambar menyamping dan bounding box kacau.
+      return img.copyRotate(imgData, angle: 90);
     }
+    
+    print("Error: Isolate menerima format selain BGRA8888/YUV420: ${image.formatGroup}");
     return null;
   }
 

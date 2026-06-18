@@ -49,7 +49,7 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
         cameras.first,
         ResolutionPreset.medium, // Medium agar FPS tetap bagus
         enableAudio: false,
-        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
+        imageFormatGroup: ImageFormatGroup.bgra8888, // WAJIB untuk performa 20fps tanpa manual convert
       );
 
       await _cameraController!.initialize();
@@ -70,13 +70,9 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
       currentDetections: const [],
     ));
 
-    int frameCount = 0;
-
     _cameraController!.startImageStream((CameraImage image) async {
-      frameCount++;
-      // Proses hanya 1 dari setiap 10 frame untuk menghindari penumpukan memori (buffer overflow)
-      if (frameCount % 10 != 0) return;
-
+      // Manajemen Frame Dinamis: Jika AI masih memproses frame sebelumnya, buang frame baru ini!
+      // Ini akan mencegah RAM penuh (buffer overflow) dan menyesuaikan FPS dengan spesifikasi HP secara otomatis.
       if (_isProcessing || _interpreter == null) return;
       _isProcessing = true;
 
@@ -89,6 +85,10 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
         );
 
         print("✅--- Live AI Check: Ditemukan ${detections.length} objek ---");
+        if (detections.isNotEmpty) {
+          final first = detections.first;
+          print("📦 Sample Box 1: x=${first.x.toStringAsFixed(2)}, y=${first.y.toStringAsFixed(2)}, w=${first.w.toStringAsFixed(2)}, h=${first.h.toStringAsFixed(2)}, conf=${first.confidence.toStringAsFixed(2)}");
+        }
 
         if (state is LiveDetectionActive) {
           emit((state as LiveDetectionActive).copyWith(currentDetections: detections));
@@ -178,15 +178,18 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
     _cameraController?.stopImageStream();
     _cameraController?.dispose();
     
+    // Putuskan referensi interpreter agar frame baru yang telat masuk tidak diproses
+    final interpreterToClose = _interpreter;
+    _interpreter = null;
+    
     // Tunggu isolate selesai bekerja sebelum menghancurkan interpreter C++
-    // Mencegah crash SIGSEGV jika pengguna keluar halaman saat AI sedang memproses frame
     int maxWait = 20; // max 1 detik
     while (_isProcessing && maxWait > 0) {
       await Future.delayed(const Duration(milliseconds: 50));
       maxWait--;
     }
     
-    _interpreter?.close();
+    interpreterToClose?.close();
     return super.close();
   }
 }
