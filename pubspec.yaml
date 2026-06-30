@@ -35,6 +35,15 @@ dependencies:
   ultralytics_yolo: ^0.2.0
   flutter:
     sdk: flutter
+  
+  sqflite: ^2.3.2             # Database lokal
+  path_provider: ^2.1.2       # Mendapatkan path direktori lokal untuk SQLite
+  path: ^1.9.0                # Manipulasi path file
+  flutter_bloc: ^8.1.5        # State management
+  equatable: ^2.0.5           # Komparasi objek untuk BLoC
+  go_router: ^13.2.0          # Navigasi
+  google_fonts: ^6.2.1        # Font Poppi
+  intl: ^0.19.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -50,15 +59,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-
-  sqflite: ^2.3.2             # Database lokal
-  path_provider: ^2.1.2       # Mendapatkan path direktori lokal untuk SQLite
-  path: ^1.9.0                # Manipulasi path file
-  flutter_bloc: ^8.1.5        # State management
-  equatable: ^2.0.5           # Komparasi objek untuk BLoC
-  go_router: ^13.2.0          # Navigasi
-  google_fonts: ^6.2.1        # Font Poppi
-  intl: ^0.19.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

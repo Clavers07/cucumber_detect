@@ -13,7 +13,7 @@ class HistoryInitial extends HistoryState {}
 class HistoryLoading extends HistoryState {}
 
 class HistoryLoaded extends HistoryState {
-  final List<HistoryEntry> historyList;
+  final List<HistoryWithDetail> historyList;
 
   const HistoryLoaded(this.historyList);
 

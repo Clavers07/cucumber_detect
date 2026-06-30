@@ -12,8 +12,12 @@
       "Pertumbuhan meninggi stabil"
     ],
     "penyebab": "Perawatan yang baik dan kondisi lingkungan yang mendukung.",
-    "penanganan": "Lanjutkan perawatan rutin seperti pemupukan dan pembersihan area sekitar pohon.",
-    "pencegahan": "Menjaga sanitasi kebun dan melakukan pengecekan rutin dari serangan hama penyakit."
+    "penanganan": [
+      "Lanjutkan perawatan rutin seperti pemupukan dan pembersihan area sekitar pohon."
+    ],
+    "pencegahan": [
+      "Menjaga sanitasi kebun dan melakukan pengecekan rutin dari serangan hama penyakit."
+    ]
   },
   {
     "id": "buah_sawit_sehat",
@@ -28,8 +32,12 @@
       "Tidak ada tanda-tanda busuk atau bekas gigitan hama"
     ],
     "penyebab": "Penyerbukan yang sukses, nutrisi yang cukup, dan bebas dari hama.",
-    "penanganan": "Panen buah pada waktu yang tepat (fraksi matang panen).",
-    "pencegahan": "Pastikan kecukupan unsur hara, terutama kalium, serta lakukan pengendalian gulma."
+    "penanganan": [
+      "Panen buah pada waktu yang tepat (fraksi matang panen)."
+    ],
+    "pencegahan": [
+      "Pastikan kecukupan unsur hara, terutama kalium, serta lakukan pengendalian gulma."
+    ]
   },
   {
     "id": "busuk_pucuk",
@@ -44,8 +52,12 @@
       "Daun yang baru muncul berwarna kecokelatan atau hitam"
     ],
     "penyebab": "Infeksi jamur Phytophthora palmivora yang sering terjadi pada kondisi lembab atau drainase yang buruk.",
-    "penanganan": "Potong bagian yang busuk sampai terlihat jaringan sehat, lalu olesi dengan fungisida tembaga atau nabati.",
-    "pencegahan": "Perbaiki drainase kebun agar tidak tergenang, lakukan penjarangan tajuk untuk mengurangi kelembaban berlebih."
+    "penanganan": [
+      "Potong bagian yang busuk sampai terlihat jaringan sehat, lalu olesi dengan fungisida tembaga atau nabati."
+    ],
+    "pencegahan": [
+      "Perbaiki drainase kebun agar tidak tergenang, lakukan penjarangan tajuk untuk mengurangi kelembaban berlebih."
+    ]
   },
   {
     "id": "daun_sehat",
@@ -60,38 +72,211 @@
       "Tidak ada bercak kuning, oranye, atau nekrosis"
     ],
     "penyebab": "Nutrisi nitrogen dan magnesium yang tercukupi dengan baik.",
-    "penanganan": "Lanjutkan penyusunan pelepah (pruning) sesuai standar agronomi.",
-    "pencegahan": "Berikan pupuk makro dan mikro secara seimbang sesuai anjuran dan umur tanaman."
+    "penanganan": [
+      "Lanjutkan penyusunan pelepah (pruning) sesuai standar agronomi."
+    ],
+    "pencegahan": [
+      "Berikan pupuk makro dan mikro secara seimbang sesuai anjuran dan umur tanaman."
+    ]
+  },
+  {
+    "id": "bercak_daun",
+    "nama": "Bercak Daun",
+    "nama_latin": "Curvularia eragrostidis",
+    "kategori": "Daun",
+    "deskripsi": "Penyakit bercak daun pada kelapa sawit adalah infeksi patogen jamur yang umumnya menyerang daun tanaman pada fase pembibitan hingga tanaman belum menghasilkan (TBM), yang berdampak pada rusaknya jaringan klorofil sehingga menghambat laju fotosintesis, menyebabkan pertumbuhan bibit menjadi kerdil, dan jika dibiarkan dapat memicu kematian bibit.",
+    "ciri_ciri": [
+      "Munculnya bercak tembus cahaya berwarna kuning kehijauan pada daun muda.",
+      "Bercak membesar menjadi warna cokelat dengan pusat berwarna kelabu.",
+      "Terdapat lingkaran kuning (halo) di sekeliling bercak.",
+      "Pada serangan lanjut, bercak menyatu dan daun menjadi kering."
+    ],
+    "penyebab": "Infeksi jamur patogen seperti Curvularia eragrostidis, Cercospora elaeidis, atau Drechslera halodes.",
+    "penanganan": [
+      "Memotong dan memusnahkan (membakar) daun yang terinfeksi parah.",
+      "Penyemprotan fungisida berbahan aktif seperti Mankozeb, Kaptan, atau Tiram dengan interval 1–2 minggu."
+    ],
+    "pencegahan": [
+      "Penyiraman bibit secara teratur dan menghindari genangan air berlebih (waterlogging).",
+      "Mengatur jarak antar polybag agar sirkulasi udara baik dan kelembapan tidak terlalu tinggi.",
+      "Pemberian pupuk dengan dosis seimbang untuk meningkatkan daya tahan bibit."
+    ]
+  },
+  {
+    "id": "karat_daun",
+    "nama": "Karat Daun",
+    "nama_latin": "Cephaleuros virescens",
+    "kategori": "Daun",
+    "deskripsi": "Penyakit karat daun atau karat merah pada kelapa sawit sebenarnya bukanlah disebabkan oleh jamur seperti penyakit karat pada umumnya, melainkan infeksi ganggang parasit yang hidup di permukaan daun tanaman tua, berdampak pada terhalangnya penetrasi cahaya matahari untuk fotosintesis, serta menurunkan nilai estetika dan efisiensi daun meski jarang mematikan tanaman secara langsung.",
+    "ciri_ciri": [
+      "Terdapat bercak-bercak berwarna jingga kemerahan maupun putih atau seperti karat besi di permukaan atas daun.",
+      "Bercak memiliki tekstur sedikit menonjol dan berbulu seperti beludru.",
+      "Sering ditemukan pada daun-daun tua atau pelepah bagian bawah."
+    ],
+    "penyebab": "Ganggang hijau parasit Cephaleuros virescens.",
+    "penanganan": [
+      "Aplikasi fungisida berbahan aktif tembaga (Copper fungicides) seperti tembaga oksida atau tembaga hidroksida secara foliar.",
+      "Pemotongan pelepah bawah yang sudah tidak produktif dan terinfeksi parah."
+    ],
+    "pencegahan": [
+      "Melakukan pemangkasan (pruning) pelepah secara rutin untuk memperbaiki sirkulasi udara dan cahaya di dalam kanopi.",
+      "Memperbaiki drainase kebun untuk menurunkan kelembapan mikroklimat."
+    ]
+  },
+  {
+    "id": "busuk_pangkal_batang",
+    "nama": "Busuk Pangkal Batang",
+    "nama_latin": "Ganoderma boninense",
+    "kategori": "Batang",
+    "deskripsi": "Busuk Pangkal Batang (BPB) adalah penyakit mematikan berupa hancurnya jaringan pengangkut (xilem dan floem) di pangkal batang sawit, yang berdampak pada berhentinya translokasi air dan hara dari akar ke tajuk, menyebabkan malnutrisi parah, berhentinya produksi buah, dan pada akhirnya membuat pohon tumbang atau mati berdiri.",
+    "ciri_ciri": [
+      "Tajuk/Daun: Akumulasi 3 atau lebih daun tombak (janur pucuk) yang tidak mau membuka.",
+      "Daun bagian bawah menguning pucat (klorosis) yang meluas ke atas.",
+      "Pelepah: Pelepah tua patah menggantung di sekitar batang (sengklek) dan membentuk seperti \"rok\".",
+      "Batang: Pangkal batang terlihat keropos, melekuk ke dalam, dan jika ditusuk akan terasa lunak atau hancur di bagian dalamnya."
+    ],
+    "penyebab": "Kerusakan struktural and pembusukan lignin di dalam batang yang diakibatkan oleh invasi miselium jamur Ganoderma boninense.",
+    "penanganan": [
+      "Pembuatan parit isolasi (trenching) berukuran 2x2 meter mengelilingi pohon sakit agar akar tidak bersentuhan dengan pohon sehat.",
+      "Pembumbunan tanah (mounding) setinggi \u00b175 cm pada pangkal batang untuk merangsang tumbuhnya akar sekunder baru agar pohon tetap bisa berproduksi sementara waktu.",
+      "Bedah miko (surgery) dengan membongkar dan membuang jaringan batang yang busuk (efektif hanya di gejala sangat awal)."
+    ],
+    "pencegahan": [
+      "Menanam bibit kelapa sawit varietas moderat tahan Ganoderma.",
+      "Menghindari penanaman di area bekas tunggul sawit tua yang berpenyakit tanpa sanitasi yang memadai."
+    ]
+  },
+  {
+    "id": "jamur_ganoderma",
+    "nama": "Jamur Ganoderma",
+    "nama_latin": "Ganoderma boninense",
+    "kategori": "Batang",
+    "deskripsi": "Jamur Ganoderma adalah wujud fisik (basidiokarp/tubuh buah) dari patogen tular tanah yang muncul di permukaan, berdampak sebagai pabrik spora yang dapat menyebarkan infeksi penyakit ke area blok perkebunan lain melalui angin atau serangga, dan kehadirannya menjadi indikator mutlak bahwa area tersebut telah berstatus endemik.",
+    "ciri_ciri": [
+      "Fase Awal: Terlihat jaringan benang putih (miselium) atau lapisan menyerupai kulit tebal berwarna putih menempel di akar atau pangkal batang.",
+      "Fase Bintil (Button): Muncul benjolan putih kecil seperti kancing di permukaan kulit kayu.",
+      "Fase Dewasa (Bracket): Tubuh buah membesar menyerupai kipas atau setengah lingkaran, keras berkayu, dengan bagian atas berwarna cokelat kemerahan mengkilap, tepi berwarna putih/kuning muda, dan bagian bawah berwarna putih (tempat spora diproduksi)."
+    ],
+    "penyebab": "Berkembangnya patogen Ganoderma boninense dari sumber inokulum (sisa tunggul akar/batang sakit di dalam tanah) yang menemukan lingkungan ideal (lembab) untuk membentuk organ reproduksi (tubuh buah).",
+    "penanganan": [
+      "Sensus rutin, pengutipan, dan pemusnahan (dibakar/dikumpulkan di kantong plastik) setiap tubuh buah Ganoderma yang ditemukan untuk mencegah penyebaran spora.",
+      "Membongkar tunggul pohon sawit mati yang menjadi inang tumbuhnya jamur ini."
+    ],
+    "pencegahan": [
+      "Sanitasi mekanis ekstra ketat saat peremajaan (replanting) dengan mencacah batang (chipping) hingga ukuran kecil (<10 cm) agar cepat terdekomposisi.",
+      "Aplikasi agens hayati Trichoderma spp. secara masif pada lubang tanam, tumpukan cacahan batang, dan di sekitar piringan pohon sebagai kompetitor alami yang mematikan pertumbuhan miselium Ganoderma."
+    ]
+  },
+  {
+    "id": "hama_kumbang_tanduk",
+    "nama": "Hama Kumbang Tanduk",
+    "nama_latin": "Oryctes rhinoceros",
+    "kategori": "Daun",
+    "deskripsi": "Kumbang tanduk adalah hama utama perusak titik tumbuh pada kelapa sawit muda (Tanaman Belum Menghasilkan/TBM) dan replanting, di mana kumbang dewasa menggerek masuk ke dalam pucuk pelepah yang belum membuka, berdampak pada cacatnya daun permanen, terhambatnya laju pertumbuhan vegetatif, hingga kematian tanaman secara langsung jika gerekan menghancurkan titik meristem pucuk.",
+    "ciri_ciri": [
+      "Terdapat lubang gerekan besar pada pangkal pelepah muda.",
+      "Saat daun membuka, anak daun terlihat terpotong simetris membentuk huruf \"V\" atau seperti potongan gunting.",
+      "Tanaman terlihat tidak simetris atau kehilangan pucuk tengah."
+    ],
+    "penyebab": "Serangga hama Oryctes rhinoceros pada fase imago (kumbang dewasa terbang dan menggerek tanaman).",
+    "penanganan": [
+      "Pengutipan manual (mengorek dan mengambil kumbang dari lubang gerekan) oleh pekerja.",
+      "Pemasangan perangkap feromon (pheromone trap) menggunakan Feromonas untuk menjebak kumbang dewasa.",
+      "Aplikasi insektisida sistemik berbahan aktif karbosulfan atau karbofuran di ketiak pelepah muda."
+    ],
+    "pencegahan": [
+      "Menanam tanaman kacangan penutup tanah (Mucuna bracteata) segera setelah replanting untuk menutupi sisa batang sawit yang menjadi tempat berkembang biak larva (uret).",
+      "Pencacahan (chipping) batang sawit tua saat peremajaan agar cepat membusuk.",
+      "Aplikasi agens hayati jamur Metarhizium anisopliae pada tumpukan bahan organik tempat larva bersarang."
+    ]
+  },
+  {
+    "id": "embun_jelaga",
+    "nama": "Embun Jelaga",
+    "nama_latin": "Capnodium sp.",
+    "kategori": "Daun",
+    "deskripsi": "Embun jelaga adalah fenomena patologis di mana permukaan atas daun kelapa sawit terselimuti lapisan hitam berdebu menyerupai jelaga akibat tumbuhnya jamur saprofitik, berdampak pada tertutupnya stomata dan terhalangnya penetrasi sinar matahari secara mekanis yang mengakibatkan fotosintesis menurun tajam dan melemahkan vigor tanaman.",
+    "ciri_ciri": [
+      "Lapisan hitam pekat menutupi permukaan atas daun dan pelepah.",
+      "Lapisan hitam ini bisa dikelupas, digosok, atau dicuci dengan air.",
+      "Daun di bawah lapisan hitam biasanya masih berwarna hijau (tidak mati).",
+      "Adanya koloni serangga seperti kutu putih atau kutu dompolan di sekitar daun atau tandan buah."
+    ],
+    "penyebab": "Tumbuhnya jamur Capnodium sp. atau Meliola sp. yang bersimbiosis hidup di atas sekresi cairan manis (embun madu/honeydew) yang dikeluarkan oleh serangga penghisap cairan tanaman (seperti Aphids atau Mealybugs).",
+    "penanganan": [
+      "Mengendalikan serangga vektor penghasil embun madu menggunakan insektisida kontak maupun sistemik.",
+      "Penyemprotan larutan air sabun atau deterjen pertanian ringan untuk mencuci lapisan jelaga dari permukaan daun."
+    ],
+    "pencegahan": [
+      "Monitoring dan pengendalian dini terhadap populasi hama kutu-kutuan.",
+      "Mengurangi populasi semut yang sering menjadi agen penyebar kutu daun.",
+      "Pemeliharaan tajuk tanaman agar sirkulasi udara baik dan kelembapan terkontrol."
+    ]
   },
   {
     "id": "hama_tikus",
     "nama": "Hama Tikus",
     "nama_latin": "Rattus tiomanicus",
     "kategori": "Buah",
-    "deskripsi": "Serangan tikus pohon yang memakan bunga dan buah kelapa sawit, menyebabkan penurunan produksi secara drastis.",
+    "deskripsi": "Tikus merupakan hama mamalia vertebrata yang sangat merugikan sepanjang siklus hidup kelapa sawit, yang aktif memakan dasar pelepah pada bibit, hingga memakan bunga dan mengerat daging buah sawit segar pada tanaman menghasilkan, berdampak pada kematian bibit, penurunan tajam jumlah panen (rendemen minyak), dan lonjakan kadar Asam Lemak Bebas (ALB/FFA) akibat luka pada buah.",
     "ciri_ciri": [
-      "Terdapat bekas gigitan (keratan) pada buah sawit yang masih di tandan",
-      "Banyak brondolan buah berserakan dengan bekas gigitan",
-      "Ditemukan sarang tikus di sela-sela pelepah atau pangkal batang"
+      "Ditemukan buah sawit di tandan berlubang atau menyisakan biji cangkangnya saja.",
+      "Terdapat bekas gigitan (keratan) bergerigi pada berondolan buah di sekitar piringan pohon.",
+      "Bunga betina/jantan rusak bekas dimakan.",
+      "Pada bibit, pangkal batang terpotong secara miring."
     ],
-    "penyebab": "Populasi tikus yang tinggi akibat kurangnya predator alami (seperti burung hantu) dan sanitasi kebun yang buruk.",
-    "penanganan": "Penggunaan rodentisida (racun tikus) seperti klerat atau penyediaan umpan beracun secara terkendali.",
-    "pencegahan": "Kembangbiakkan burung hantu (Tyto alba) sebagai predator alami dengan membangun pagupon di kebun."
+    "penyebab": "Tikus pohon (Rattus tiomanicus) dan tikus sawah (Rattus argentiventer).",
+    "penanganan": [
+      "Aplikasi umpan beracun (rodentisida) berbahan aktif antikoagulan (seperti kumatetralil atau brodifakum) yang diletakkan di ketiak pelepah atau piringan secara bergelombang (kampanye umpan).",
+      "Perburuan manual (gropyokan) jika populasi sangat tinggi."
+    ],
+    "pencegahan": [
+      "Pemasangan kandang buatan (gupon) dan introduksi predator alami burung hantu (Tyto alba) di area perkebunan.",
+      "Pembersihan gulma di piringan pohon dan jalan rintis (sanitasi kebun) agar tidak menjadi sarang tikus."
+    ]
   },
   {
-    "id": "jamur_ganoderma",
-    "nama": "Jamur Ganoderma (Busuk Pangkal Batang)",
-    "nama_latin": "Ganoderma boninense",
-    "kategori": "Batang",
-    "deskripsi": "Penyakit mematikan pada kelapa sawit yang menyebabkan busuk pada pangkal batang sehingga aliran nutrisi terputus dan pohon tumbang.",
+    "id": "hawar_daun",
+    "nama": "Hawar Daun",
+    "nama_latin": "Pestalotiopsis palmarum",
+    "kategori": "Daun",
+    "deskripsi": "Penyakit hawar daun adalah penyakit jamur yang sangat agresif yang sering menyerang pembibitan kelapa sawit (Pre-Nursery dan Main-Nursery), berdampak pada nekrosis luas di mana jaringan daun mengering dengan cepat, menyebabkan kehilangan tajuk fotosintetik, tanaman kerdil secara permanen, dan gagalnya suplai bibit sehat ke lapangan akibat tingkat kematian bibit yang tinggi.",
     "ciri_ciri": [
-      "Munculnya badan buah jamur berbentuk seperti kipas di pangkal batang",
-      "Beberapa pelepah bawah layu dan menggantung (seperti rok)",
-      "Pucuk daun muda (tombak) tidak membuka (lebih dari 3 tombak)",
-      "Batang keropos bila ditekan atau diketok"
+      "Berawal dari bercak cokelat kecil yang membesar dengan sangat cepat dan memanjang sejajar tulang daun.",
+      "Bercak menyatu membentuk hawar (area nekrotik besar yang mati dan kering) berwarna cokelat tua hingga keabu-abuan.",
+      "Terdapat batas yang jelas antara daun yang mati (hawar) dan jaringan hijau yang sehat.",
+      "Daun terlihat seperti hangus terbakar."
     ],
-    "penyebab": "Infeksi patogen tular tanah Ganoderma boninense yang menular melalui kontak akar dari tunggul yang terinfeksi sebelumnya.",
-    "penanganan": "Membongkar tanaman yang terserang parah beserta akarnya, lalu dicacah agar cepat lapuk, atau membuat parit isolasi.",
-    "pencegahan": "Aplikasi agen hayati Trichoderma pada bibit dan lubang tanam, serta sanitasi sisa batang saat peremajaan kebun (replanting)."
+    "penyebab": "Infeksi jamur patogen Pestalotiopsis palmarum atau bentuk infeksi lanjut dari Curvularia sp., yang sering dipicu oleh kelembapan sangat tinggi dan kelebihan penyiraman.",
+    "penanganan": [
+      "Pemangkasan dan pembakaran segera daun-daun yang telah terinfeksi penyakit hawar.",
+      "Penyemprotan fungisida sistemik berbahan aktif difenokonazol, propikonazol, atau tebukonazol sesuai dosis anjuran pabrik."
+    ],
+    "pencegahan": [
+      "Menghindari pemberian naungan yang terlalu gelap/rapat di pembibitan Pre-Nursery.",
+      "Menyesuaikan volume penyiraman agar daun bibit tidak basah menjelang sore/malam hari.",
+      "Pemupukan ekstra hara Kalium (K) untuk memperkuat dinding sel daun."
+    ]
+  },
+  {
+    "id": "defisiensi_boron",
+    "nama": "Defisiensi Boron",
+    "nama_latin": "Boron Deficiency",
+    "kategori": "Daun",
+    "deskripsi": "Defisiensi Boron adalah gangguan fisiologis yang sangat kritis pada kelapa sawit akibat kekurangan unsur hara mikro boron yang esensial untuk pembelahan sel meristematik, berdampak parah pada malformasi daun baru, gagalnya pembentukan bunga dan buah, hingga penurunan drastis produksi Tandan Buah Segar (TBS).",
+    "ciri_ciri": [
+      "Ujung anak daun mengeriting (hook leaf).",
+      "Daun bergelombang, kusut, rapuh, dan berwarna hijau gelap.",
+      "Anak daun berubah bentuk menjadi seperti sirip ikan hiu (fish-bone leaf).",
+      "Pada tingkat parah, pelepah memendek secara abnormal dengan anak daun menempel di ujungnya (blind-man's walking stick)."
+    ],
+    "penyebab": "Rendahnya ketersediaan unsur Boron di dalam tanah, sering terjadi di tanah berpasir, tanah gambut, atau akibat curah hujan sangat tinggi (pencucian hara), serta ketidakseimbangan kation antagonis seperti tingginya Nitrogen atau Kalsium.",
+    "penanganan": [
+      "Aplikasi pupuk yang mengandung Boron (seperti Borax, HGF Borate, atau Ulexite) di area piringan (weeded circle) dengan dosis sekitar 50–100 gram/pohon tergantung umur dan tingkat keparahan."
+    ],
+    "pencegahan": [
+      "Melakukan pemupukan berimbang berdasarkan hasil Analisis Daun (LSU) dan Analisis Tanah tahunan.",
+      "Menghindari aplikasi pupuk N (Urea) dalam dosis berlebihan yang dapat menekan penyerapan Boron."
+    ]
   }
 ]

@@ -1,15 +1,12 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import '../models/disease_model.dart';
+import '../../../core/database/database_service.dart';
 
 class DictionaryService {
   Future<List<DiseaseModel>> loadDiseases() async {
     try {
-      final String response = await rootBundle.loadString('assets/data/diseases.json');
-      final List<dynamic> data = json.decode(response);
-      return data.map((json) => DiseaseModel.fromJson(json)).toList();
+      return await DatabaseService.instance.getAllDiseases();
     } catch (e) {
-      print('Error loading diseases: $e');
+      print('Error loading diseases from DB: $e');
       return [];
     }
   }

@@ -218,9 +218,9 @@ class _DiseaseDetailPageState extends State<DiseaseDetailPage> {
                   const SizedBox(height: AppSpacing.md),
                   _buildSection('Penyebab', disease.penyebab),
                   const SizedBox(height: AppSpacing.md),
-                  _buildSection('Penanganan', disease.penanganan),
+                  _buildListSection('Penanganan', disease.penanganan),
                   const SizedBox(height: AppSpacing.md),
-                  _buildSection('Pencegahan', disease.pencegahan),
+                  _buildListSection('Pencegahan', disease.pencegahan),
                   const SizedBox(height: 40), // Spacing bawah
                 ],
               ),

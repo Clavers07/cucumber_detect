@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../features/dictionary/models/disease_model.dart';
 
 // Model untuk menampung hasil satu bounding box (Murni tanpa UI)
 class DetectionBox {
@@ -37,13 +38,13 @@ class HistoryEntry {
   final List<DetectionBox> boxes;
   final int detectedAt; // epoch ms
   final int inferenceTimeMs;
-  final String topLabel;
+  final String diseaseId; // Refaktor dari topLabel menjadi diseaseId
   final double topConfidence;
 
   HistoryEntry({
     this.id, required this.imagePath, required this.boxes,
     required this.detectedAt, required this.inferenceTimeMs,
-    required this.topLabel, required this.topConfidence,
+    required this.diseaseId, required this.topConfidence,
   });
 
   Map<String, dynamic> toMap() {
@@ -53,7 +54,7 @@ class HistoryEntry {
       'boxes': jsonEncode(boxes.map((b) => b.toMap()).toList()), // List di-encode jadi JSON String
       'detected_at': detectedAt,
       'inference_time_ms': inferenceTimeMs,
-      'top_label': topLabel,
+      'disease_id': diseaseId,
       'top_confidence': topConfidence,
     };
   }
@@ -66,8 +67,52 @@ class HistoryEntry {
       boxes: boxesJson.map((b) => DetectionBox.fromMap(b)).toList(),
       detectedAt: map['detected_at']?.toInt() ?? 0,
       inferenceTimeMs: map['inference_time_ms']?.toInt() ?? 0,
-      topLabel: map['top_label'] ?? '',
+      diseaseId: map['disease_id'] ?? '',
       topConfidence: map['top_confidence']?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+// Model gabungan untuk UI yang butuh detail penyakit sekaligus data histori (hasil JOIN)
+class HistoryWithDetail {
+  final int id;
+  final String imagePath;
+  final List<DetectionBox> boxes;
+  final int detectedAt;
+  final int inferenceTimeMs;
+  final double topConfidence;
+  final DiseaseModel disease;
+
+  HistoryWithDetail({
+    required this.id,
+    required this.imagePath,
+    required this.boxes,
+    required this.detectedAt,
+    required this.inferenceTimeMs,
+    required this.topConfidence,
+    required this.disease,
+  });
+
+  factory HistoryWithDetail.fromMap(Map<String, dynamic> map) {
+    final List<dynamic> boxesJson = jsonDecode(map['boxes'] as String);
+    return HistoryWithDetail(
+      id: map['history_id']?.toInt() ?? 0,
+      imagePath: map['image_path'] ?? '',
+      boxes: boxesJson.map((b) => DetectionBox.fromMap(b)).toList(),
+      detectedAt: map['detected_at']?.toInt() ?? 0,
+      inferenceTimeMs: map['inference_time_ms']?.toInt() ?? 0,
+      topConfidence: map['top_confidence']?.toDouble() ?? 0.0,
+      disease: DiseaseModel(
+        id: map['disease_id'] ?? '',
+        nama: map['disease_nama'] ?? '',
+        namaLatin: map['disease_nama_latin'] ?? '',
+        kategori: map['disease_kategori'] ?? '',
+        deskripsi: map['disease_deskripsi'] ?? '',
+        ciriCiri: List<String>.from(jsonDecode(map['disease_ciri_ciri'] ?? '[]')),
+        penyebab: map['disease_penyebab'] ?? '',
+        penanganan: List<String>.from(jsonDecode(map['disease_penanganan'] ?? '[]')),
+        pencegahan: List<String>.from(jsonDecode(map['disease_pencegahan'] ?? '[]')),
+      ),
     );
   }
 }

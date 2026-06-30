@@ -11,8 +11,8 @@ class HistoryCubit extends Cubit<HistoryState> {
   Future<void> loadHistory() async {
     try {
       emit(HistoryLoading());
-      // Pemanggilan ini berjalan asinkronus
-      final history = await _dbService.getAllHistory();
+      // Pemanggilan ini berjalan asinkronus dengan query JOIN
+      final history = await _dbService.getAllHistoryWithDetail();
       emit(HistoryLoaded(history));
     } catch (e) {
       emit(HistoryError('Gagal memuat riwayat: $e'));

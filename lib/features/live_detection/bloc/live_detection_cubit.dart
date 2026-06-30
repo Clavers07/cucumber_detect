@@ -7,7 +7,7 @@ import '../../../core/services/isolate_inference.dart';
 import '../../../core/database/database_service.dart';
 import '../../../core/services/ml_service.dart';
 import '../../../../data/models/detection_models.dart';
-import 'package:flutter/services.dart';
+
 
 class LiveDetectionCubit extends Cubit<LiveDetectionState> {
   final MLService _staticMlService;
@@ -16,7 +16,6 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
   CameraController? _cameraController;
   Interpreter? _interpreter;
   bool _isProcessing = false;
-  List<String> _labels = [];
   
   // Konfigurasi model
   final int _inputSize = 640;
@@ -30,10 +29,6 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
 
       // Pastikan MLService statis sudah diinisialisasi
       await _staticMlService.init();
-
-      // 1. Load Labels
-      final labelsData = await rootBundle.loadString('assets/labels.txt');
-      _labels = labelsData.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
       // 2. Load Interpreter untuk stream (tetap dipertahankan address-nya)
       _interpreter = await Interpreter.fromAsset('assets/best_float16.tflite');
@@ -152,15 +147,23 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
     final frozenState = state as LiveDetectionFrozen;
     
     try {
-      String topLabel = "Unknown";
+      String diseaseId = "unknown";
       double topConfidence = 0.0;
       
       if (frozenState.detections.isNotEmpty) {
         final bestDetection = frozenState.detections.reduce((a, b) => a.confidence > b.confidence ? a : b);
-        if (bestDetection.classIndex < _labels.length) {
-          topLabel = _labels[bestDetection.classIndex];
-        } else {
-          topLabel = "Class ${bestDetection.classIndex}";
+        
+        const List<String> diseaseIds = [
+          'batang_sawit_sehat',
+          'buah_sawit_sehat',
+          'busuk_pucuk',
+          'daun_sehat',
+          'hama_tikus',
+          'jamur_ganoderma',
+        ];
+
+        if (bestDetection.classIndex < diseaseIds.length) {
+          diseaseId = diseaseIds[bestDetection.classIndex];
         }
         topConfidence = bestDetection.confidence;
       }
@@ -170,7 +173,7 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
         boxes: frozenState.detections,
         detectedAt: DateTime.now().millisecondsSinceEpoch,
         inferenceTimeMs: 0, // Not tracked separately here
-        topLabel: topLabel,
+        diseaseId: diseaseId,
         topConfidence: topConfidence,
       );
 

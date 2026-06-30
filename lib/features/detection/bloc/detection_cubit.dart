@@ -53,9 +53,19 @@ class DetectionCubit extends Cubit<DetectionState> {
         // Simpan gambar secara lokal agar tidak hilang saat cache Android dibersihkan
         final savedImagePath = await _saveImageLocally(imageFile);
         
-        final String topLabelName = _mlService.labels.isNotEmpty && topDetection.classIndex < _mlService.labels.length 
-            ? _mlService.labels[topDetection.classIndex] 
-            : 'Class ${topDetection.classIndex}';
+        // Mapping index kelas model (0-5) ke ID penyakit di SQLite
+        const List<String> diseaseIds = [
+          'batang_sawit_sehat',
+          'buah_sawit_sehat',
+          'busuk_pucuk',
+          'daun_sehat',
+          'hama_tikus',
+          'jamur_ganoderma',
+        ];
+
+        final String diseaseId = topDetection.classIndex < diseaseIds.length 
+            ? diseaseIds[topDetection.classIndex] 
+            : 'unknown';
 
         // Buat model histori
         final historyEntry = HistoryEntry(
@@ -63,7 +73,7 @@ class DetectionCubit extends Cubit<DetectionState> {
           boxes: detections,
           detectedAt: DateTime.now().millisecondsSinceEpoch,
           inferenceTimeMs: inferenceTime,
-          topLabel: topLabelName,
+          diseaseId: diseaseId,
           topConfidence: topDetection.confidence,
         );
 

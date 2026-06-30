@@ -6,8 +6,8 @@ class DiseaseModel {
   final String deskripsi;
   final List<String> ciriCiri;
   final String penyebab;
-  final String penanganan;
-  final String pencegahan;
+  final List<String> penanganan;
+  final List<String> pencegahan;
 
   DiseaseModel({
     required this.id,
@@ -30,8 +30,8 @@ class DiseaseModel {
       deskripsi: json['deskripsi'] ?? '',
       ciriCiri: List<String>.from(json['ciri_ciri'] ?? []),
       penyebab: json['penyebab'] ?? '',
-      penanganan: json['penanganan'] ?? '',
-      pencegahan: json['pencegahan'] ?? '',
+      penanganan: List<String>.from(json['penanganan'] ?? []),
+      pencegahan: List<String>.from(json['pencegahan'] ?? []),
     );
   }
 
