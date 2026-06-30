@@ -38,7 +38,7 @@ class HistoryCubit extends Cubit<HistoryState> {
     }
   }
 
-  // --- FILTER & SORT OPERATIONS ---
+  // --- FILTER, SORT & PAGINATION OPERATIONS ---
 
   void changeSearchQuery(String query) {
     final currentState = state;
@@ -54,6 +54,7 @@ class HistoryCubit extends Cubit<HistoryState> {
       emit(currentState.copyWith(
         searchQuery: query,
         historyList: filteredList,
+        currentPage: 1, // Reset ke halaman 1 saat filter berubah
       ));
     }
   }
@@ -72,6 +73,7 @@ class HistoryCubit extends Cubit<HistoryState> {
       emit(currentState.copyWith(
         selectedCategory: () => category,
         historyList: filteredList,
+        currentPage: 1, // Reset ke halaman 1
       ));
     }
   }
@@ -90,6 +92,7 @@ class HistoryCubit extends Cubit<HistoryState> {
       emit(currentState.copyWith(
         selectedDiseaseId: () => diseaseId,
         historyList: filteredList,
+        currentPage: 1, // Reset ke halaman 1
       ));
     }
   }
@@ -108,6 +111,7 @@ class HistoryCubit extends Cubit<HistoryState> {
       emit(currentState.copyWith(
         selectedDateFilter: dateFilter,
         historyList: filteredList,
+        currentPage: 1, // Reset ke halaman 1
       ));
     }
   }
@@ -126,6 +130,27 @@ class HistoryCubit extends Cubit<HistoryState> {
       emit(currentState.copyWith(
         sortBy: sortBy,
         historyList: filteredList,
+        currentPage: 1, // Reset ke halaman 1
+      ));
+    }
+  }
+
+  void changePage(int page) {
+    final currentState = state;
+    if (currentState is HistoryLoaded) {
+      final totalPages = (currentState.historyList.length / currentState.pageSize).ceil();
+      if (page >= 1 && page <= (totalPages == 0 ? 1 : totalPages)) {
+        emit(currentState.copyWith(currentPage: page));
+      }
+    }
+  }
+
+  void changePageSize(int pageSize) {
+    final currentState = state;
+    if (currentState is HistoryLoaded) {
+      emit(currentState.copyWith(
+        pageSize: pageSize,
+        currentPage: 1, // Reset ke halaman 1 saat ukuran halaman berubah
       ));
     }
   }
@@ -147,6 +172,7 @@ class HistoryCubit extends Cubit<HistoryState> {
         selectedDiseaseId: () => null,
         selectedDateFilter: 'all',
         sortBy: 'newest',
+        currentPage: 1,
         historyList: filteredList,
       ));
     }

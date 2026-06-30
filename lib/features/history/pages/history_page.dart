@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../data/models/detection_models.dart';
 import '../bloc/history_cubit.dart';
 import '../bloc/history_state.dart';
 
@@ -44,11 +43,16 @@ class _HistoryPageState extends State<HistoryPage> {
               child: Text(state.message, style: const TextStyle(color: AppColors.error)),
             );
           } else if (state is HistoryLoaded) {
+            final startIndex = (state.currentPage - 1) * state.pageSize;
+            final endIndex = (startIndex + state.pageSize) < state.historyList.length 
+                ? (startIndex + state.pageSize) 
+                : state.historyList.length;
+            final pageItems = state.historyList.sublist(startIndex, endIndex);
+
             return Column(
               children: [
                 _buildSearchBar(context, state),
                 _buildFilterChips(context, state),
-                _buildStatsCard(state.originalHistory),
                 Expanded(
                   child: state.historyList.isEmpty
                       ? const Center(
@@ -63,9 +67,9 @@ class _HistoryPageState extends State<HistoryPage> {
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          itemCount: state.historyList.length,
+                          itemCount: pageItems.length,
                           itemBuilder: (context, index) {
-                            final entry = state.historyList[index];
+                            final entry = pageItems[index];
                             final date = DateTime.fromMillisecondsSinceEpoch(entry.detectedAt);
                             final formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(date);
                             final File imageFile = File(entry.imagePath);
@@ -162,6 +166,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           },
                         ),
                 ),
+                _buildPaginationControl(context, state),
               ],
             );
           }
@@ -307,80 +312,93 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildStatsCard(List<HistoryWithDetail> originalHistory) {
-    if (originalHistory.isEmpty) return const SizedBox.shrink();
-    
-    final total = originalHistory.length;
-    final avgConf = originalHistory.map((e) => e.topConfidence).reduce((a, b) => a + b) / total;
-    final avgConfPct = (avgConf * 100).toStringAsFixed(1);
-    
-    final catCounts = <String, int>{};
-    for (final item in originalHistory) {
-      final cat = item.disease.kategori;
-      catCounts[cat] = (catCounts[cat] ?? 0) + 1;
-    }
-    
-    var topCategory = '-';
-    var maxCount = 0;
-    catCounts.forEach((cat, count) {
-      if (count > maxCount) {
-        maxCount = count;
-        topCategory = cat;
-      }
-    });
+  Widget _buildPaginationControl(BuildContext context, HistoryLoaded state) {
+    if (state.historyList.isEmpty) return const SizedBox.shrink();
+
+    final totalItems = state.historyList.length;
+    final totalPages = (totalItems / state.pageSize).ceil();
+    final currentPage = state.currentPage;
+
+    final startIndex = (currentPage - 1) * state.pageSize + 1;
+    final endIndex = (currentPage * state.pageSize) < totalItems 
+        ? (currentPage * state.pageSize) 
+        : totalItems;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        gradient: LinearGradient(
-          colors: [AppColors.primary.withOpacity(0.05), Colors.white],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        border: Border(top: BorderSide(color: Colors.grey[200]!)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem('Total Deteksi', '$total', Icons.analytics_outlined),
-          _buildStatItem('Rerata Akurasi', '$avgConfPct%', Icons.offline_bolt_outlined),
-          _buildStatItem('Dominan', topCategory, Icons.spa_outlined),
-        ],
-      ),
-    );
-  }
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                '$startIndex-$endIndex',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            
+            // Dropdown Pilihan Jumlah Data (Page Size: 5, 10, 20, 50)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Tampilkan: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                DropdownButton<int>(
+                  value: state.pageSize,
+                  items: [5, 10, 20, 50].map((size) {
+                    return DropdownMenuItem<int>(
+                      value: size,
+                      child: Text('$size', style: const TextStyle(fontSize: 13)),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      context.read<HistoryCubit>().changePageSize(val);
+                    }
+                  },
+                  underline: const SizedBox.shrink(),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: AppColors.secondary, size: 24),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+            // Tombol Navigasi Halaman (Prev / Next)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, size: 20),
+                  onPressed: currentPage > 1 
+                      ? () => context.read<HistoryCubit>().changePage(currentPage - 1) 
+                      : null,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '$currentPage / ${totalPages == 0 ? 1 : totalPages}', 
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, size: 20),
+                  onPressed: currentPage < totalPages 
+                      ? () => context.read<HistoryCubit>().changePage(currentPage + 1) 
+                      : null,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
