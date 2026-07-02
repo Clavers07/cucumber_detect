@@ -1,13 +1,18 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/bounding_box_overlay.dart';
 import '../../../data/models/detection_models.dart';
 import '../../../core/database/database_service.dart';
+import '../../../core/utils/image_utils.dart';
 import '../../dictionary/pages/disease_detail_page.dart';
 import '../bloc/history_cubit.dart';
 import '../bloc/history_state.dart';
@@ -20,11 +25,27 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  List<String> _labels = [];
+
   @override
   void initState() {
     super.initState();
+    _loadLabels();
     // Memuat data secara otomatis saat halaman dibuka
     context.read<HistoryCubit>().loadHistory();
+  }
+
+  Future<void> _loadLabels() async {
+    try {
+      final labelsData = await rootBundle.loadString('assets/labels.txt');
+      if (mounted) {
+        setState(() {
+          _labels = const LineSplitter().convert(labelsData).map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ Gagal memuat labels.txt di HistoryPage: $e');
+    }
   }
 
   @override
@@ -621,6 +642,21 @@ class _HistoryPageState extends State<HistoryPage> {
                 .where((box) => box.confidence >= localThreshold)
                 .toList();
 
+            final Map<String, List<double>> dynamicGrouped = {};
+            for (var box in filteredBoxes) {
+              final String label = _labels.isNotEmpty && box.classIndex < _labels.length ? _labels[box.classIndex] : 'Class ${box.classIndex}';
+              dynamicGrouped.putIfAbsent(label, () => []).add(box.confidence);
+            }
+
+            final List<String> dynamicList = [];
+            for (var entry in dynamicGrouped.entries) {
+              final labelName = entry.key;
+              final count = entry.value.length;
+              final avgConf = entry.value.reduce((a, b) => a + b) / entry.value.length;
+              final percentage = (avgConf * 100).toStringAsFixed(1);
+              dynamicList.add('${count}x $labelName ($percentage%)');
+            }
+
             return FutureBuilder<List<String>>(
               future: DatabaseService.instance.getAllDiseases().then((list) => list.map((d) => d.id).toList()),
               builder: (context, snapshot) {
@@ -651,38 +687,156 @@ class _HistoryPageState extends State<HistoryPage> {
                           ),
                           const SizedBox(height: 20),
                           
-                          // Image Preview dengan BoundingBoxOverlay Dinamis
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: imageFile.existsSync()
-                                ? Container(
-                                    height: 200,
-                                    width: double.infinity,
-                                    color: Colors.black,
-                                    child: FutureBuilder<ImageInfo>(
-                                      future: _getImageInfo(imageFile),
-                                      builder: (context, infoSnapshot) {
-                                        if (!infoSnapshot.hasData) {
-                                          return const Center(child: CircularProgressIndicator());
-                                        }
-                                        return BoundingBoxOverlay(
-                                          image: imageFile,
-                                          detections: filteredBoxes,
-                                          originalWidth: infoSnapshot.data!.image.width.toDouble(),
-                                          originalHeight: infoSnapshot.data!.image.height.toDouble(),
-                                          labels: const [], // labels tidak dipakai di BoundingBoxOverlay
-                                        );
-                                      },
-                                    ),
-                                  )
-                                : Container(
-                                    width: double.infinity,
-                                    height: 200,
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                          // Image Preview dengan BoundingBoxOverlay Dinamis + Download/Share Buttons
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: imageFile.existsSync()
+                                    ? Container(
+                                        height: 200,
+                                        width: double.infinity,
+                                        color: Colors.black,
+                                        child: FutureBuilder<ImageInfo>(
+                                          future: _getImageInfo(imageFile),
+                                          builder: (context, infoSnapshot) {
+                                            if (!infoSnapshot.hasData) {
+                                              return const Center(child: CircularProgressIndicator());
+                                            }
+                                            return BoundingBoxOverlay(
+                                              image: imageFile,
+                                              detections: filteredBoxes,
+                                              originalWidth: infoSnapshot.data!.image.width.toDouble(),
+                                              originalHeight: infoSnapshot.data!.image.height.toDouble(),
+                                              labels: const [], // labels tidak dipakai di BoundingBoxOverlay
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    : Container(
+                                        width: double.infinity,
+                                        height: 200,
+                                        color: Colors.grey[200],
+                                        child: const Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                                      ),
+                              ),
+                              // Tombol Download dan Share
+                              if (imageFile.existsSync())
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _buildImageOverlayButton(
+                                        icon: Icons.download,
+                                        onTap: () async {
+                                          ScaffoldMessenger.of(stContext).showSnackBar(
+                                            const SnackBar(content: Text('Menyiapkan file gambar...'), duration: Duration(milliseconds: 500)),
+                                          );
+                                          
+                                          final overlayFile = await ImageUtils.generateOverlayImage(
+                                            originalImageFile: imageFile,
+                                            detections: entry.boxList,
+                                            confidenceThreshold: localThreshold,
+                                          );
+                                          
+                                          if (overlayFile == null) {
+                                            if (modalContext.mounted) {
+                                              ScaffoldMessenger.of(modalContext).showSnackBar(
+                                                const SnackBar(content: Text('Gagal membuat overlay gambar.'), backgroundColor: AppColors.error),
+                                              );
+                                            }
+                                            return;
+                                          }
+                                          
+                                          try {
+                                            final downloadPath = await getPublicDownloadPath();
+                                            if (downloadPath != null) {
+                                              final fileName = 'cucumber_detect_${DateTime.now().millisecondsSinceEpoch}.jpg';
+                                              final File destFile = File('$downloadPath/$fileName');
+                                              await overlayFile.copy(destFile.path);
+                                              
+                                              if (modalContext.mounted) {
+                                                ScaffoldMessenger.of(modalContext).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Gambar berhasil diunduh ke: $downloadPath/$fileName'),
+                                                    backgroundColor: Colors.green,
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          } catch (e) {
+                                            if (modalContext.mounted) {
+                                              ScaffoldMessenger.of(modalContext).showSnackBar(
+                                                SnackBar(content: Text('Gagal menyimpan gambar: $e'), backgroundColor: AppColors.error),
+                                              );
+                                            }
+                                          }
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildImageOverlayButton(
+                                        icon: Icons.share,
+                                        onTap: () async {
+                                          ScaffoldMessenger.of(stContext).showSnackBar(
+                                            const SnackBar(content: Text('Menyiapkan file untuk dibagikan...'), duration: Duration(milliseconds: 500)),
+                                          );
+                                          
+                                          final overlayFile = await ImageUtils.generateOverlayImage(
+                                            originalImageFile: imageFile,
+                                            detections: entry.boxList,
+                                            confidenceThreshold: localThreshold,
+                                          );
+                                          
+                                          if (overlayFile == null) {
+                                            if (modalContext.mounted) {
+                                              ScaffoldMessenger.of(modalContext).showSnackBar(
+                                                const SnackBar(content: Text('Gagal membuat file sharing.'), backgroundColor: AppColors.error),
+                                              );
+                                            }
+                                            return;
+                                          }
+
+                                          await Share.shareXFiles(
+                                            [XFile(overlayFile.path)],
+                                            text: 'Hasil Deteksi AI Penyakit Kelapa Sawit (${entry.disease.nama})',
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
+                                ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
+
+                          // List Info Deteksi Dinamis
+                          if (dynamicList.isNotEmpty) ...[
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: dynamicList.map((info) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: AppColors.primary.withOpacity(0.15), width: 1),
+                                  ),
+                                  child: Text(
+                                    info,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
 
                           // Slider Confidence Dinamis di bawah gambar
                           if (entry.boxList.isNotEmpty) ...[
@@ -881,5 +1035,44 @@ class _HistoryPageState extends State<HistoryPage> {
       if (!completer.isCompleted) completer.complete(info);
     }));
     return completer.future;
+  }
+
+  Future<String?> getPublicDownloadPath() async {
+    if (Platform.isAndroid) {
+      // Menggunakan folder Downloads eksternal khusus aplikasi (bebas izin di Android 10+ / Scoped Storage)
+      final List<Directory>? dirs = await getExternalStorageDirectories(type: StorageDirectory.downloads);
+      if (dirs != null && dirs.isNotEmpty) {
+        await dirs.first.create(recursive: true);
+        return dirs.first.path;
+      }
+      return '/storage/emulated/0/Download';
+    } else if (Platform.isIOS) {
+      final dir = await getApplicationDocumentsDirectory();
+      return dir.path;
+    } else {
+      final dir = await getDownloadsDirectory();
+      return dir?.path;
+    }
+  }
+
+  Widget _buildImageOverlayButton({required IconData icon, required VoidCallback onTap}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.10),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withOpacity(0.20), width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+        ),
+      ),
+    );
   }
 }

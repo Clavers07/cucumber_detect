@@ -31,4 +31,63 @@ class ImageUtils {
     final File savedImage = await imageFile.copy(destinationPath);
     return savedImage.path;
   }
+
+  // Membuat duplikat gambar dengan bounding box digambar permanen pada pikselnya (berdasarkan confidence threshold)
+  static Future<File?> generateOverlayImage({
+    required File originalImageFile,
+    required List<DetectionBox> detections,
+    required double confidenceThreshold,
+  }) async {
+    try {
+      final bytes = await originalImageFile.readAsBytes();
+      final img.Image? decoded = img.decodeImage(bytes);
+
+      if (decoded != null) {
+        final originalWidth = decoded.width;
+        final originalHeight = decoded.height;
+
+        final List<img.Color> colors = [
+          img.ColorRgb8(255, 0, 0),     // Red
+          img.ColorRgb8(0, 0, 255),     // Blue
+          img.ColorRgb8(0, 255, 0),     // Green
+          img.ColorRgb8(255, 165, 0),   // Orange
+          img.ColorRgb8(128, 0, 128),   // Purple
+          img.ColorRgb8(0, 255, 255),   // Cyan
+        ];
+
+        // Filter deteksi berdasarkan confidence threshold
+        final filtered = detections.where((box) => box.confidence >= confidenceThreshold).toList();
+
+        for (var box in filtered) {
+          final int x1 = (box.x * originalWidth).round().clamp(0, originalWidth - 1);
+          final int y1 = (box.y * originalHeight).round().clamp(0, originalHeight - 1);
+          final int x2 = ((box.x + box.w) * originalWidth).round().clamp(0, originalWidth - 1);
+          final int y2 = ((box.y + box.h) * originalHeight).round().clamp(0, originalHeight - 1);
+
+          final img.Color color = colors[box.classIndex % colors.length];
+          final int thickness = (originalWidth * 0.005).round().clamp(2, 8);
+
+          img.drawRect(
+            decoded,
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2,
+            color: color,
+            thickness: thickness,
+          );
+        }
+
+        // Simpan sebagai file temporer di cache directory
+        final tempDir = await getTemporaryDirectory();
+        final tempFile = File('${tempDir.path}/temp_overlay_${DateTime.now().millisecondsSinceEpoch}.jpg');
+        final encoded = img.encodeJpg(decoded, quality: 90);
+        await tempFile.writeAsBytes(encoded);
+        return tempFile;
+      }
+    } catch (e) {
+      print('❌ Gagal membuat overlay gambar: $e');
+    }
+    return null;
+  }
 }
