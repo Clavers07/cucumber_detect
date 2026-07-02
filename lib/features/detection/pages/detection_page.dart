@@ -448,34 +448,35 @@ class _DetectionResultTabsState extends State<_DetectionResultTabs> with TickerP
                   if (_diseases.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0, right: 16.0, left: 16.0, bottom: 8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          final targetId = selectedTab.toLowerCase().replaceAll(' ', '_');
-                          final index = _diseases.indexWhere((d) => d.id == targetId);
-                          if (index != -1) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DiseaseDetailPage(disease: _diseases[index]),
-                              ),
-                            );
-                          }
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Text(
-                              'Lihat Detail',
-                              style: TextStyle(
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                                decorationColor: Colors.blue,
-                                fontWeight: FontWeight.w300,
-                              ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final targetId = selectedTab.toLowerCase().replaceAll(' ', '_');
+                            final index = _diseases.indexWhere((d) => d.id == targetId);
+                            if (index != -1) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DiseaseDetailPage(disease: _diseases[index]),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.menu_book_rounded, size: 20),
+                          label: const Text(
+                            'Lihat Penanganan Lengkap',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            SizedBox(width: 4),
-                            Icon(Icons.arrow_outward, size: 16, color: Colors.blue),
-                          ],
+                            elevation: 0,
+                          ),
                         ),
                       ),
                     ),
