@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/bounding_box_overlay.dart';
 import '../../../data/models/detection_models.dart';
 import '../../../core/database/database_service.dart';
 import '../../dictionary/pages/disease_detail_page.dart';
@@ -611,182 +613,258 @@ class _HistoryPageState extends State<HistoryPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (modalContext) {
-        return FutureBuilder<List<String>>(
-          future: DatabaseService.instance.getAllDiseases().then((list) => list.map((d) => d.id).toList()),
-          builder: (context, snapshot) {
-            final availableIds = snapshot.data ?? const [];
+        double localThreshold = 0.40; // State threshold lokal untuk modal ini
 
-            return DraggableScrollableSheet(
-              initialChildSize: 0.55,
-              maxChildSize: 0.85,
-              minChildSize: 0.4,
-              expand: false,
-              builder: (stContext, scrollController) {
-                return SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Drag Handle
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // Image Preview
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: imageFile.existsSync()
-                            ? Image.file(
-                                imageFile,
-                                width: double.infinity,
-                                height: 200,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                width: double.infinity,
-                                height: 200,
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
-                              ),
-                      ),
-                      const SizedBox(height: 20),
+        return StatefulBuilder(
+          builder: (stContext, setState) {
+            final filteredBoxes = entry.boxList
+                .where((box) => box.confidence >= localThreshold)
+                .toList();
 
-                      // Title (Top Label)
-                      Text(
-                        entry.disease.nama,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.disease.namaLatin,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontStyle: FontStyle.italic,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+            return FutureBuilder<List<String>>(
+              future: DatabaseService.instance.getAllDiseases().then((list) => list.map((d) => d.id).toList()),
+              builder: (context, snapshot) {
+                final availableIds = snapshot.data ?? const [];
 
-                      // Metadata Row (Kategori & Waktu)
-                      Row(
+                return DraggableScrollableSheet(
+                  initialChildSize: 0.65,
+                  maxChildSize: 0.90,
+                  minChildSize: 0.4,
+                  expand: false,
+                  builder: (stScrollContext, scrollController) {
+                    return SingleChildScrollView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              entry.disease.kategori,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.secondary,
+                          // Drag Handle
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 20),
+                          
+                          // Image Preview dengan BoundingBoxOverlay Dinamis
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: imageFile.existsSync()
+                                ? Container(
+                                    height: 200,
+                                    width: double.infinity,
+                                    color: Colors.black,
+                                    child: FutureBuilder<ImageInfo>(
+                                      future: _getImageInfo(imageFile),
+                                      builder: (context, infoSnapshot) {
+                                        if (!infoSnapshot.hasData) {
+                                          return const Center(child: CircularProgressIndicator());
+                                        }
+                                        return BoundingBoxOverlay(
+                                          image: imageFile,
+                                          detections: filteredBoxes,
+                                          originalWidth: infoSnapshot.data!.image.width.toDouble(),
+                                          originalHeight: infoSnapshot.data!.image.height.toDouble(),
+                                          labels: const [], // labels tidak dipakai di BoundingBoxOverlay
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : Container(
+                                    width: double.infinity,
+                                    height: 200,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                                  ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Slider Confidence Dinamis di bawah gambar
+                          if (entry.boxList.isNotEmpty) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Filter Confidence',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    '${(localThreshold * 100).toStringAsFixed(0)}%',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: AppColors.primary,
+                                inactiveTrackColor: AppColors.primary.withOpacity(0.15),
+                                thumbColor: AppColors.primary,
+                                overlayColor: AppColors.primary.withOpacity(0.12),
+                                valueIndicatorColor: AppColors.primary,
+                                trackHeight: 4,
+                              ),
+                              child: Slider(
+                                value: localThreshold,
+                                min: 0.1,
+                                max: 1.0,
+                                divisions: 18,
+                                label: '${(localThreshold * 100).toStringAsFixed(0)}%',
+                                onChanged: (value) {
+                                  setState(() {
+                                    localThreshold = value;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // Title (Top Label)
                           Text(
-                            formattedDate,
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            entry.disease.nama,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            entry.disease.namaLatin,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Metadata Row (Kategori & Waktu)
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  entry.disease.kategori,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.secondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                formattedDate,
+                                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 32),
+
+                          // Section: Semua Label Terdeteksi (Interactive CTA Badges)
+                          const Text(
+                            'Hasil Deteksi Multi-Label',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List.generate(entry.diseaseList.length, (index) {
+                              final String diseaseId = entry.diseaseList[index];
+                              final bool isAvailable = availableIds.contains(diseaseId);
+                              final String summary = entry.labelSummaries[index];
+                              
+                              return Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: isAvailable
+                                      ? () async {
+                                          final disease = await DatabaseService.instance.getDiseaseById(diseaseId);
+                                          if (disease != null && modalContext.mounted) {
+                                            // Tutup sheet terlebih dahulu
+                                            Navigator.pop(modalContext);
+                                            // Navigasi ke halaman detail
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => DiseaseDetailPage(disease: disease),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      : null,
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isAvailable 
+                                          ? AppColors.primary.withOpacity(0.08)
+                                          : Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isAvailable 
+                                            ? AppColors.primary.withOpacity(0.2)
+                                            : Colors.grey[300]!,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          summary,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: isAvailable ? AppColors.primary : Colors.grey[600],
+                                          ),
+                                        ),
+                                        if (isAvailable) ...[
+                                          const SizedBox(width: 6),
+                                          const Icon(
+                                            Icons.open_in_new,
+                                            size: 13,
+                                            color: AppColors.primary,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
                           ),
                         ],
                       ),
-                      const Divider(height: 32),
-
-                      // Section: Semua Label Terdeteksi (Interactive CTA Badges)
-                      const Text(
-                        'Hasil Deteksi Multi-Label',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: List.generate(entry.diseaseList.length, (index) {
-                          final String diseaseId = entry.diseaseList[index];
-                          final bool isAvailable = availableIds.contains(diseaseId);
-                          final String summary = entry.labelSummaries[index];
-                          
-                          return Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: isAvailable
-                                  ? () async {
-                                      final disease = await DatabaseService.instance.getDiseaseById(diseaseId);
-                                      if (disease != null && modalContext.mounted) {
-                                        // Tutup sheet terlebih dahulu
-                                        Navigator.pop(modalContext);
-                                        // Navigasi ke halaman detail
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => DiseaseDetailPage(disease: disease),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  : null,
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isAvailable 
-                                      ? AppColors.primary.withOpacity(0.08)
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isAvailable 
-                                        ? AppColors.primary.withOpacity(0.2)
-                                        : Colors.grey[300]!,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      summary,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: isAvailable ? AppColors.primary : Colors.grey[600],
-                                      ),
-                                    ),
-                                    if (isAvailable) ...[
-                                      const SizedBox(width: 6),
-                                      const Icon(
-                                        Icons.open_in_new,
-                                        size: 13,
-                                        color: AppColors.primary,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 );
               },
             );
@@ -794,5 +872,14 @@ class _HistoryPageState extends State<HistoryPage> {
         );
       },
     );
+  }
+
+  Future<ImageInfo> _getImageInfo(File file) async {
+    final Completer<ImageInfo> completer = Completer();
+    final ImageStream stream = FileImage(file).resolve(const ImageConfiguration());
+    stream.addListener(ImageStreamListener((ImageInfo info, bool _) {
+      if (!completer.isCompleted) completer.complete(info);
+    }));
+    return completer.future;
   }
 }

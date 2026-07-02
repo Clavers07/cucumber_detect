@@ -42,6 +42,7 @@ class HistoryEntry {
   final List<String> diseaseList;
   final List<double> confidenceList;
   final List<int> countList;
+  final List<DetectionBox> boxList;
 
   HistoryEntry({
     this.id,
@@ -53,6 +54,7 @@ class HistoryEntry {
     required this.diseaseList,
     required this.confidenceList,
     required this.countList,
+    required this.boxList,
   });
 
   Map<String, dynamic> toMap() {
@@ -66,6 +68,7 @@ class HistoryEntry {
       'disease_list': jsonEncode(diseaseList),
       'confidence_list': jsonEncode(confidenceList),
       'count_list': jsonEncode(countList),
+      'box_list': jsonEncode(boxList.map((x) => x.toMap()).toList()),
     };
   }
 
@@ -80,6 +83,10 @@ class HistoryEntry {
       diseaseList: List<String>.from(jsonDecode(map['disease_list'] as String? ?? '[]')),
       confidenceList: List<double>.from(jsonDecode(map['confidence_list'] as String? ?? '[]').map((x) => x.toDouble())),
       countList: List<int>.from(jsonDecode(map['count_list'] as String? ?? '[]').map((x) => x.toInt())),
+      boxList: List<DetectionBox>.from(
+        (jsonDecode(map['box_list'] as String? ?? '[]') as List)
+            .map((x) => DetectionBox.fromMap(x as Map<String, dynamic>))
+      ),
     );
   }
 }
@@ -95,6 +102,7 @@ class HistoryWithDetail {
   final List<String> diseaseList;
   final List<double> confidenceList;
   final List<int> countList;
+  final List<DetectionBox> boxList;
 
   HistoryWithDetail({
     required this.id,
@@ -106,6 +114,7 @@ class HistoryWithDetail {
     required this.diseaseList,
     required this.confidenceList,
     required this.countList,
+    required this.boxList,
   });
 
   // Mengembalikan list ringkasan untuk di-render di UI, misal: "2x Jamur Ganoderma (85.5%)"
@@ -151,6 +160,10 @@ class HistoryWithDetail {
       diseaseList: List<String>.from(jsonDecode(map['disease_list'] as String? ?? '[]')),
       confidenceList: List<double>.from(jsonDecode(map['confidence_list'] as String? ?? '[]').map((x) => x.toDouble())),
       countList: List<int>.from(jsonDecode(map['count_list'] as String? ?? '[]').map((x) => x.toInt())),
+      boxList: List<DetectionBox>.from(
+        (jsonDecode(map['box_list'] as String? ?? '[]') as List)
+            .map((x) => DetectionBox.fromMap(x as Map<String, dynamic>))
+      ),
     );
   }
 }

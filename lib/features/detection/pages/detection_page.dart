@@ -23,6 +23,8 @@ class DetectionPage extends StatefulWidget {
 }
 
 class _DetectionPageState extends State<DetectionPage> {
+  double _confidenceThreshold = 0.40; // Default threshold
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +116,7 @@ class _DetectionPageState extends State<DetectionPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                if (state is DetectionSuccess) _buildSliderCard(state),
                 _buildActionSection(context, state),
                 // Spacing ekstra di bawah agar tidak tertutup floating action button
                 const SizedBox(height: 100),
@@ -159,6 +162,10 @@ class _DetectionPageState extends State<DetectionPage> {
         ),
       );
     } else if (state is DetectionSuccess) {
+      final filteredDetections = state.detections
+          .where((box) => box.confidence >= _confidenceThreshold)
+          .toList();
+
       return FutureBuilder<ImageInfo>(
         future: _getImageInfo(state.image),
         builder: (context, snapshot) {
@@ -166,7 +173,7 @@ class _DetectionPageState extends State<DetectionPage> {
           
           return BoundingBoxOverlay(
             image: state.image,
-            detections: state.detections,
+            detections: filteredDetections,
             originalWidth: snapshot.data!.image.width.toDouble(),
             originalHeight: snapshot.data!.image.height.toDouble(),
             labels: state.labels,
@@ -248,12 +255,74 @@ class _DetectionPageState extends State<DetectionPage> {
     }
 
     if (state is DetectionSuccess) {
+      final filteredDetections = state.detections
+          .where((box) => box.confidence >= _confidenceThreshold)
+          .toList();
+
       return _DetectionResultTabs(
-        detections: state.detections, 
+        detections: filteredDetections, 
         labels: state.labels,
       );
     }
     return const SizedBox.shrink();
+  }
+
+  Widget _buildSliderCard(DetectionSuccess state) {
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Minimal Confidence',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${(_confidenceThreshold * 100).toStringAsFixed(0)}%',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: AppColors.primary.withOpacity(0.15),
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withOpacity(0.12),
+              valueIndicatorColor: AppColors.primary,
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: _confidenceThreshold,
+              min: 0.1,
+              max: 1.0,
+              divisions: 18,
+              label: '${(_confidenceThreshold * 100).toStringAsFixed(0)}%',
+              onChanged: (value) {
+                setState(() {
+                  _confidenceThreshold = value;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<ImageInfo> _getImageInfo(File file) async {

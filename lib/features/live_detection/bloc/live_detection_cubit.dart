@@ -182,10 +182,8 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
         confidenceList.add(avgConf);
       }
 
-      final String savedImagePath = await ImageUtils.saveImageLocallyWithDetections(
+      final String savedImagePath = await ImageUtils.saveImageLocally(
         File(frozenState.imagePath),
-        frozenState.detections,
-        mlService.labels,
       );
 
       final entry = HistoryEntry(
@@ -197,6 +195,7 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
         diseaseList: diseaseList,
         confidenceList: confidenceList,
         countList: countList,
+        boxList: frozenState.detections,
       );
 
       await DatabaseService.instance.insertHistory(entry);

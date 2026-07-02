@@ -25,7 +25,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 3, // Versi 3 untuk restrukturisasi boxes ke list penyakit, confidence, dan count
+      version: 4, // Versi 4 untuk menambahkan kolom box_list koordinat bounding box
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -55,6 +55,7 @@ class DatabaseService {
         disease_list TEXT NOT NULL,
         confidence_list TEXT NOT NULL,
         count_list TEXT NOT NULL,
+        box_list TEXT NOT NULL,
         detected_at INTEGER NOT NULL,
         inference_time_ms INTEGER NOT NULL,
         disease_id TEXT NOT NULL, -- Relasi Foreign Key
@@ -71,9 +72,9 @@ class DatabaseService {
     await _injectInitialDiseases(db);
   }
 
-  // Handle migrasi jika versi database sebelumnya adalah versi 1
+  // Handle migrasi jika versi database sebelumnya adalah versi < 4
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 3) {
+    if (oldVersion < 4) {
       await db.execute('DROP TABLE IF EXISTS detection_history');
       await db.execute('DROP TABLE IF EXISTS penyakit');
       await _createDB(db, newVersion);
@@ -172,6 +173,7 @@ class DatabaseService {
         h.disease_list,
         h.confidence_list,
         h.count_list,
+        h.box_list,
         h.detected_at,
         h.inference_time_ms,
         h.top_confidence,

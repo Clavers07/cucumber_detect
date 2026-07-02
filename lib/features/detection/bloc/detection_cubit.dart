@@ -49,12 +49,8 @@ class DetectionCubit extends Cubit<DetectionState> {
         // Cari objek dengan confidence tertinggi
         final topDetection = detections.reduce((a, b) => a.confidence > b.confidence ? a : b);
         
-        // Simpan gambar secara lokal dan timpa dengan gambar yang digambari bounding box & label
-        final savedImagePath = await ImageUtils.saveImageLocallyWithDetections(
-          imageFile,
-          detections,
-          _mlService.labels,
-        );
+        // Simpan gambar asli secara lokal (raw)
+        final savedImagePath = await ImageUtils.saveImageLocally(imageFile);
         
         final List<String> labels = _mlService.labels;
         final String topLabel = topDetection.classIndex < labels.length 
@@ -93,6 +89,7 @@ class DetectionCubit extends Cubit<DetectionState> {
           diseaseList: diseaseList,
           confidenceList: confidenceList,
           countList: countList,
+          boxList: detections,
         );
 
         // Simpan ke SQLite via Background Service (Asinkronus)
