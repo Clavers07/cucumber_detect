@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 import '../../../core/services/ml_service.dart';
 import '../../../core/database/database_service.dart';
+import '../../../core/utils/image_utils.dart';
 import '../../../data/models/detection_models.dart';
 import 'detection_state.dart';
 
@@ -50,8 +49,12 @@ class DetectionCubit extends Cubit<DetectionState> {
         // Cari objek dengan confidence tertinggi
         final topDetection = detections.reduce((a, b) => a.confidence > b.confidence ? a : b);
         
-        // Simpan gambar secara lokal agar tidak hilang saat cache Android dibersihkan
-        final savedImagePath = await _saveImageLocally(imageFile);
+        // Simpan gambar secara lokal dan timpa dengan gambar yang digambari bounding box & label
+        final savedImagePath = await ImageUtils.saveImageLocallyWithDetections(
+          imageFile,
+          detections,
+          _mlService.labels,
+        );
         
         final List<String> labels = _mlService.labels;
         final String topLabel = topDetection.classIndex < labels.length 
@@ -106,14 +109,6 @@ class DetectionCubit extends Cubit<DetectionState> {
     } catch (e) {
       emit(DetectionError('Gagal memproses gambar: $e'));
     }
-  }
-
-  // Fungsi utilitas untuk mengamankan file gambar dari temporary folder ke app document
-  Future<String> _saveImageLocally(File imageFile) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(imageFile.path)}';
-    final savedImage = await imageFile.copy('${directory.path}/$fileName');
-    return savedImage.path;
   }
 
   void resetState() {

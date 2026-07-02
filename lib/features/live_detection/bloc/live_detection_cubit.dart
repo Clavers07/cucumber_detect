@@ -6,6 +6,7 @@ import 'live_detection_state.dart';
 import '../../../core/services/isolate_inference.dart';
 import '../../../core/database/database_service.dart';
 import '../../../core/services/ml_service.dart';
+import '../../../core/utils/image_utils.dart';
 import '../../../../data/models/detection_models.dart';
 
 
@@ -181,8 +182,14 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
         confidenceList.add(avgConf);
       }
 
+      final String savedImagePath = await ImageUtils.saveImageLocallyWithDetections(
+        File(frozenState.imagePath),
+        frozenState.detections,
+        mlService.labels,
+      );
+
       final entry = HistoryEntry(
-        imagePath: frozenState.imagePath,
+        imagePath: savedImagePath,
         detectedAt: DateTime.now().millisecondsSinceEpoch,
         inferenceTimeMs: 0, // Not tracked separately here
         diseaseId: diseaseId,
