@@ -32,7 +32,7 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
       await _staticMlService.init();
 
       // 2. Load Interpreter untuk stream (tetap dipertahankan address-nya)
-      _interpreter = await Interpreter.fromAsset('assets/best_float16.tflite');
+      _interpreter = await Interpreter.fromAsset('assets/best_float32.tflite');
 
       // 3. Init Camera
       final cameras = await availableCameras();

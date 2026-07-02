@@ -7,7 +7,7 @@ import '../../data/models/detection_models.dart';
 import '../utils/image_utils.dart';
 
 class IsolateInference {
-  static const String _modelPath = 'assets/best_float16.tflite';
+  static const String _modelPath = 'assets/best_float32.tflite';
 
   static Future<List<DetectionBox>> runInference(CameraImage cameraImage, Interpreter interpreter, int inputSize, double confThreshold) async {
     // Kumpulkan data yang bisa di-serialize untuk dikirim ke Isolate
@@ -65,6 +65,8 @@ class IsolateInference {
 
     // 5. Post-process
     final List<DetectionBox> raw = [];
+    double absoluteMaxScore = 0.0;
+    
     for (int i = 0; i < numAnchors; i++) {
       double maxScore = 0.0;
       int classIdx = 0;
@@ -75,6 +77,11 @@ class IsolateInference {
           classIdx = c;
         }
       }
+      
+      if (maxScore > absoluteMaxScore) {
+        absoluteMaxScore = maxScore;
+      }
+
       if (maxScore < data.confThreshold) continue;
 
       final cx = output[0][0][i];
@@ -82,27 +89,38 @@ class IsolateInference {
       final bw = output[0][2][i];
       final bh = output[0][3][i];
 
+      // Normalize coordinates
+      final normalizedX = (cx - bw / 2) / data.inputSize;
+      final normalizedY = (cy - bh / 2) / data.inputSize;
+      final normalizedW = bw / data.inputSize;
+      final normalizedH = bh / data.inputSize;
+
       raw.add(DetectionBox(
-        x: cx - bw / 2,
-        y: cy - bh / 2,
-        w: bw,
-        h: bh,
+        x: normalizedX.clamp(0.0, 1.0),
+        y: normalizedY.clamp(0.0, 1.0),
+        w: normalizedW.clamp(0.0, 1.0),
+        h: normalizedH.clamp(0.0, 1.0),
         confidence: maxScore,
         classIndex: classIdx,
       ));
     }
 
+    print('📊 IsolateInference: Max score = $absoluteMaxScore, raw detections above threshold = ${raw.length}');
     return _nms(raw, 0.45);
   }
 
   static img.Image? _convertCameraImage(_InferenceModel image) {
     if (image.formatGroup == ImageFormatGroup.bgra8888) {
-      return img.Image.fromBytes(
+      final imgData = img.Image.fromBytes(
         width: image.width,
         height: image.height,
         bytes: image.planes[0].buffer,
         order: img.ChannelOrder.bgra,
       );
+      // ROTASI: Sensor kamera fisik adalah landscape (berputar 90 derajat).
+      // Kita harus memutar frame BGRA8888 sebesar 90 derajat searah jarum jam
+      // agar AI melihat gambar dalam orientasi portrait yang tegak.
+      return img.copyRotate(imgData, angle: 90);
     } else if (image.formatGroup == ImageFormatGroup.yuv420) {
       // YUV420 Fallback for Android devices that don't support BGRA8888
       final int width = image.width;
@@ -128,9 +146,9 @@ class IsolateInference {
           int up = uBuffer[uvIndex];
           int vp = vBuffer[uvIndex];
 
-          // Konversi standar YUV ke RGB
+          // Konversi standar YUV ke RGB dengan offset yang benar (+135 untuk green)
           int r = (yp + vp * 1436 / 1024 - 179).round().clamp(0, 255);
-          int g = (yp - up * 46549 / 131072 - vp * 93604 / 131072 + 44).round().clamp(0, 255);
+          int g = (yp - up * 46549 / 131072 - vp * 93604 / 131072 + 135).round().clamp(0, 255);
           int b = (yp + up * 1814 / 1024 - 227).round().clamp(0, 255);
 
           imgData.setPixelRgb(x, y, r, g, b);
@@ -138,7 +156,6 @@ class IsolateInference {
       }
       
       // ROTASI: Sensor kamera Android biasanya landscape (rotasi 90 derajat)
-      // Jika tidak dirotasi, AI akan melihat gambar menyamping dan bounding box kacau.
       return img.copyRotate(imgData, angle: 90);
     }
     

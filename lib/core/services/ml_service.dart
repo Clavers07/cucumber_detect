@@ -34,8 +34,15 @@ class MLService {
 
   Future<void> _loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/best_int8.tflite');
+      _interpreter = await Interpreter.fromAsset('assets/best_float32.tflite');
       debugPrint('✅ MLService: Model loaded');
+      
+      // Print input tensor details to check layout (NCHW vs NHWC)
+      final inputTensor = _interpreter!.getInputTensor(0);
+      debugPrint('📊 MLService Model Input: shape=${inputTensor.shape}, type=${inputTensor.type}, name=${inputTensor.name}');
+      
+      final outputTensor = _interpreter!.getOutputTensor(0);
+      debugPrint('📊 MLService Model Output: shape=${outputTensor.shape}, type=${outputTensor.type}, name=${outputTensor.name}');
     } catch (e) {
       debugPrint('❌ MLService Error: $e');
     }
@@ -79,17 +86,37 @@ class MLService {
 
     _interpreter!.run(input, output);
 
+    // Logging output shape and sample values for debugging
+    debugPrint('📊 MLService: Inference completed. Output shape: $outputShape');
+    
+    // Print raw values for first and middle anchors to inspect data range
+    if (numAnchorsDynamic > 0) {
+      debugPrint('📊 MLService Raw Anchor 0: coords=[${output[0][0][0]}, ${output[0][1][0]}, ${output[0][2][0]}, ${output[0][3][0]}], classes=[${List.generate(numClassesDynamic, (c) => output[0][4 + c][0].toStringAsFixed(4)).join(', ')}]');
+    }
+    if (numAnchorsDynamic > 4000) {
+      debugPrint('📊 MLService Raw Anchor 4000: coords=[${output[0][0][4000]}, ${output[0][1][4000]}, ${output[0][2][4000]}, ${output[0][3][4000]}], classes=[${List.generate(numClassesDynamic, (c) => output[0][4 + c][4000].toStringAsFixed(4)).join(', ')}]');
+    }
+    
+    double absoluteMaxScore = -double.infinity;
+    double absoluteMinScore = double.infinity;
+    bool hasNegativeScores = false;
+    
     final List<DetectionBox> raw = [];
     for (int i = 0; i < numAnchorsDynamic; i++) {
-      double maxScore = 0.0;
+      double maxScore = -double.infinity;
       int classIdx = 0;
       for (int c = 0; c < numClassesDynamic; c++) {
         final s = output[0][4 + c][i];
+        if (s < absoluteMinScore) absoluteMinScore = s;
+        if (s > absoluteMaxScore) absoluteMaxScore = s;
+        if (s < 0) hasNegativeScores = true;
+        
         if (s > maxScore) {
           maxScore = s;
           classIdx = c;
         }
       }
+
       if (maxScore < confThreshold) continue;
 
       final cx = output[0][0][i];
@@ -97,14 +124,29 @@ class MLService {
       final bw = output[0][2][i];
       final bh = output[0][3][i];
 
+      // YOLOv8/v12 outputs absolute pixel values (0-640).
+      // We divide by inputSize (640) to normalize them to [0, 1] range
+      // so that they render correctly in the BoundingBoxOverlay widget.
+      final normalizedX = (cx - bw / 2) / inputSize;
+      final normalizedY = (cy - bh / 2) / inputSize;
+      final normalizedW = bw / inputSize;
+      final normalizedH = bh / inputSize;
+
       raw.add(DetectionBox(
-        x: cx - bw / 2,
-        y: cy - bh / 2,
-        w: bw,
-        h: bh,
+        x: normalizedX.clamp(0.0, 1.0),
+        y: normalizedY.clamp(0.0, 1.0),
+        w: normalizedW.clamp(0.0, 1.0),
+        h: normalizedH.clamp(0.0, 1.0),
         confidence: maxScore,
         classIndex: classIdx,
       ));
+    }
+
+    debugPrint('📊 MLService: Score Range = [$absoluteMinScore, $absoluteMaxScore]');
+    debugPrint('📊 MLService: Has negative scores (Logits)? = $hasNegativeScores');
+    debugPrint('📊 MLService: Total raw detections above threshold ($confThreshold) = ${raw.length}');
+    if (raw.isNotEmpty) {
+      debugPrint('📊 MLService: Sample detection: x=${raw[0].x.toStringAsFixed(2)}, y=${raw[0].y.toStringAsFixed(2)}, w=${raw[0].w.toStringAsFixed(2)}, h=${raw[0].h.toStringAsFixed(2)}, conf=${raw[0].confidence.toStringAsFixed(2)}, class=${raw[0].classIndex}');
     }
 
     return _nms(raw);
