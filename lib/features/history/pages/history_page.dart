@@ -7,12 +7,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/bounding_box_overlay.dart';
 import '../../../data/models/detection_models.dart';
 import '../../../core/database/database_service.dart';
 import '../../../core/utils/image_utils.dart';
+import '../../../core/services/pdf_export_service.dart';
 import '../../dictionary/pages/disease_detail_page.dart';
 import '../bloc/history_cubit.dart';
 import '../bloc/history_state.dart';
@@ -26,6 +29,8 @@ class HistoryPage extends StatefulWidget {
 
 class _HistoryPageState extends State<HistoryPage> {
   List<String> _labels = [];
+  bool _isSelectionMode = false;
+  final Set<int> _selectedIds = {};
 
   @override
   void initState() {
@@ -48,18 +53,143 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
+  Future<void> _exportSelectedToPdf(BuildContext context, List<int> selectedIds) async {
+    final int totalCount = selectedIds.length;
+    final ValueNotifier<int> progressNotifier = ValueNotifier<int>(0);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return ValueListenableBuilder<int>(
+          valueListenable: progressNotifier,
+          builder: (context, value, child) {
+            return AlertDialog(
+              title: const Text('Membuat Laporan PDF'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: AppColors.primary),
+                  const SizedBox(height: 16),
+                  Text('Memproses gambar: $value dari $totalCount...'),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    try {
+      final historyCubit = context.read<HistoryCubit>();
+      final List<HistoryWithDetail> selectedEntries = [];
+      
+      final state = historyCubit.state;
+      if (state is HistoryLoaded) {
+        for (var id in selectedIds) {
+          final entry = state.historyList.firstWhere((e) => e.id == id);
+          selectedEntries.add(entry);
+        }
+      }
+
+      if (selectedEntries.isEmpty) {
+        if (context.mounted) Navigator.of(context).pop();
+        return;
+      }
+
+      final pdfBytes = await PdfExportService.generatePdfReport(
+        entries: selectedEntries,
+        labels: _labels,
+        confidenceThreshold: 0.40,
+        onProgress: (processed, total) {
+          progressNotifier.value = processed;
+        },
+      );
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Tutup loading dialog
+        
+        setState(() {
+          _isSelectionMode = false;
+          _selectedIds.clear();
+        });
+
+        await Printing.layoutPdf(
+          onLayout: (PdfPageFormat format) async => pdfBytes,
+          name: 'laporan_kesehatan_sawit_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Tutup loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengekspor PDF: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Riwayat Deteksi'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<HistoryCubit>().loadHistory(),
-          )
-        ],
-      ),
+      appBar: _isSelectionMode
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    _isSelectionMode = false;
+                    _selectedIds.clear();
+                  });
+                },
+              ),
+              title: Text('${_selectedIds.length} Terpilih'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.select_all),
+                  tooltip: 'Pilih Semua',
+                  onPressed: () {
+                    final historyState = context.read<HistoryCubit>().state;
+                    if (historyState is HistoryLoaded) {
+                      final startIndex = (historyState.currentPage - 1) * historyState.pageSize;
+                      final endIndex = (startIndex + historyState.pageSize) < historyState.historyList.length 
+                          ? (startIndex + historyState.pageSize) 
+                          : historyState.historyList.length;
+                      final pageItems = historyState.historyList.sublist(startIndex, endIndex);
+
+                      setState(() {
+                        final allSelected = pageItems.every((item) => _selectedIds.contains(item.id));
+                        if (allSelected) {
+                          for (var item in pageItems) {
+                            _selectedIds.remove(item.id);
+                          }
+                        } else {
+                          for (var item in pageItems) {
+                            _selectedIds.add(item.id);
+                          }
+                        }
+                      });
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.picture_as_pdf),
+                  tooltip: 'Cetak/Ekspor PDF',
+                  onPressed: _selectedIds.isEmpty
+                      ? null
+                      : () => _exportSelectedToPdf(context, _selectedIds.toList()),
+                ),
+              ],
+            )
+          : AppBar(
+              title: const Text('Riwayat Deteksi'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => context.read<HistoryCubit>().loadHistory(),
+                )
+              ],
+            ),
       body: BlocBuilder<HistoryCubit, HistoryState>(
         builder: (context, state) {
           if (state is HistoryLoading) {
@@ -101,12 +231,63 @@ class _HistoryPageState extends State<HistoryPage> {
                             final File imageFile = File(entry.imagePath);
 
                             return GestureDetector(
-                              onTap: () => _showDetailBottomSheet(context, entry),
-                              child: AppCard(
+                              onTap: () {
+                                if (_isSelectionMode) {
+                                  setState(() {
+                                    if (_selectedIds.contains(entry.id)) {
+                                      _selectedIds.remove(entry.id);
+                                      if (_selectedIds.isEmpty) {
+                                        _isSelectionMode = false;
+                                      }
+                                    } else {
+                                      _selectedIds.add(entry.id);
+                                    }
+                                  });
+                                } else {
+                                  _showDetailBottomSheet(context, entry);
+                                }
+                              },
+                              onLongPress: () {
+                                if (!_isSelectionMode) {
+                                  setState(() {
+                                    _isSelectionMode = true;
+                                    _selectedIds.add(entry.id);
+                                  });
+                                }
+                              },
+                              child: Container(
                                 margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.all(12),
-                                child: Row(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: _isSelectionMode && _selectedIds.contains(entry.id)
+                                      ? Border.all(color: AppColors.primary, width: 1.5)
+                                      : null,
+                                ),
+                                child: AppCard(
+                                  margin: EdgeInsets.zero,
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
                                   children: [
+                                    // Checkbox untuk Selection Mode
+                                    if (_isSelectionMode) ...[
+                                      Checkbox(
+                                        activeColor: AppColors.primary,
+                                        value: _selectedIds.contains(entry.id),
+                                        onChanged: (bool? checked) {
+                                          setState(() {
+                                            if (checked == true) {
+                                              _selectedIds.add(entry.id);
+                                            } else {
+                                              _selectedIds.remove(entry.id);
+                                              if (_selectedIds.isEmpty) {
+                                                _isSelectionMode = false;
+                                              }
+                                            }
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
                                     // Thumbnail Gambar
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
@@ -116,6 +297,8 @@ class _HistoryPageState extends State<HistoryPage> {
                                               width: 80,
                                               height: 80,
                                               fit: BoxFit.cover,
+                                              cacheWidth: 160,
+                                              cacheHeight: 160,
                                             )
                                           : Container(
                                               width: 80,
@@ -195,41 +378,43 @@ class _HistoryPageState extends State<HistoryPage> {
                                         ],
                                       ),
                                     ),
-                                    // Tombol Hapus
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext dialogContext) {
-                                            return AlertDialog(
-                                              title: const Text('Hapus Riwayat'),
-                                              content: const Text('Apakah Anda yakin ingin menghapus data riwayat ini?'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(dialogContext).pop(),
-                                                  child: const Text('Batal'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.of(dialogContext).pop();
-                                                    context.read<HistoryCubit>().deleteHistory(entry.id);
-                                                  },
-                                                  child: const Text(
-                                                    'Hapus',
-                                                    style: TextStyle(color: AppColors.error),
+                                    // Tombol Hapus (hanya tampil jika tidak dalam selection mode)
+                                    if (!_isSelectionMode)
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext dialogContext) {
+                                              return AlertDialog(
+                                                title: const Text('Hapus Riwayat'),
+                                                content: const Text('Apakah Anda yakin ingin menghapus data riwayat ini?'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(dialogContext).pop(),
+                                                    child: const Text('Batal'),
                                                   ),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      },
-                                    )
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(dialogContext).pop();
+                                                      context.read<HistoryCubit>().deleteHistory(entry.id);
+                                                    },
+                                                    child: const Text(
+                                                      'Hapus',
+                                                      style: TextStyle(color: AppColors.error),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      )
                                   ],
                                 ),
                               ),
-                            );
+                            ),
+                          );
                           },
                         ),
                 ),
@@ -750,10 +935,32 @@ class _HistoryPageState extends State<HistoryPage> {
                                             return;
                                           }
                                           
+                                          final fileName = 'cucumber_detect_${DateTime.now().millisecondsSinceEpoch}.jpg';
+                                          
+                                          // Coba simpan ke folder Download umum Android terlebih dahulu
+                                          if (Platform.isAndroid) {
+                                            try {
+                                              const publicDownloadPath = '/storage/emulated/0/Download';
+                                              final File destFile = File('$publicDownloadPath/$fileName');
+                                              await overlayFile.copy(destFile.path);
+                                              
+                                              if (modalContext.mounted) {
+                                                ScaffoldMessenger.of(modalContext).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Gambar berhasil diunduh ke folder Download!'),
+                                                    backgroundColor: Colors.green,
+                                                  ),
+                                                );
+                                              }
+                                              return;
+                                            } catch (e) {
+                                              debugPrint('⚠️ Gagal menyimpan ke Download umum: $e. Menggunakan folder alternatif...');
+                                            }
+                                          }
+                                          
                                           try {
                                             final downloadPath = await getPublicDownloadPath();
                                             if (downloadPath != null) {
-                                              final fileName = 'cucumber_detect_${DateTime.now().millisecondsSinceEpoch}.jpg';
                                               final File destFile = File('$downloadPath/$fileName');
                                               await overlayFile.copy(destFile.path);
                                               

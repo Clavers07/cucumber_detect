@@ -22,11 +22,35 @@ class ImageUtils {
     }
   }
 
-  // Mengamankan file gambar dari temporary folder ke app document secara bersih (raw)
+  // Mengamankan file gambar dari temporary folder ke app document secara bersih (raw) dengan kompresi otomatis (max 1080px, quality 80)
   static Future<String> saveImageLocally(File imageFile) async {
     final directory = await getApplicationDocumentsDirectory();
     final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(imageFile.path)}';
     final String destinationPath = '${directory.path}/$fileName';
+
+    try {
+      final bytes = await imageFile.readAsBytes();
+      img.Image? image = img.decodeImage(bytes);
+      
+      if (image != null) {
+        // Downscale jika melebihi 1080px
+        if (image.width > 1080 || image.height > 1080) {
+          image = img.copyResize(
+            image,
+            width: image.width > image.height ? 1080 : null,
+            height: image.height >= image.width ? 1080 : null,
+          );
+        }
+        // Encode ke JPG dengan kualitas 80%
+        final compressedBytes = img.encodeJpg(image, quality: 80);
+        final File savedImage = File(destinationPath);
+        await savedImage.writeAsBytes(compressedBytes);
+        return savedImage.path;
+      }
+    } catch (e) {
+      // Fallback jika proses kompresi bermasalah
+      print('⚠️ Gagal kompresi gambar: $e. Menyalin gambar asli...');
+    }
 
     final File savedImage = await imageFile.copy(destinationPath);
     return savedImage.path;
