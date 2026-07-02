@@ -82,6 +82,7 @@ flutter:
     - assets/best_float16.tflite
     - assets/data/
     - assets/images/diseases/
+    - assets/sawit-up.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
