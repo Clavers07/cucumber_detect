@@ -202,9 +202,9 @@ class HistoryCubit extends Cubit<HistoryState> {
       filtered = filtered.where((item) => item.disease.kategori.toLowerCase() == category.toLowerCase()).toList();
     }
 
-    // 3. Filter Jenis Penyakit/Label
+    // 3. Filter Jenis Penyakit/Label (Mencakup seluruh label terdeteksi di diseaseList)
     if (diseaseId != null && diseaseId.isNotEmpty) {
-      filtered = filtered.where((item) => item.disease.id == diseaseId).toList();
+      filtered = filtered.where((item) => item.diseaseList.contains(diseaseId)).toList();
     }
 
     // 4. Filter Waktu/Tanggal

@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../data/models/detection_models.dart';
+import '../../../core/database/database_service.dart';
+import '../../dictionary/pages/disease_detail_page.dart';
 import '../bloc/history_cubit.dart';
 import '../bloc/history_state.dart';
 
@@ -74,93 +77,134 @@ class _HistoryPageState extends State<HistoryPage> {
                             final formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(date);
                             final File imageFile = File(entry.imagePath);
 
-                            return AppCard(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  // Thumbnail Gambar
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: imageFile.existsSync()
-                                        ? Image.file(
-                                            imageFile,
-                                            width: 80,
-                                            height: 80,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Container(
-                                            width: 80,
-                                            height: 80,
-                                            color: Colors.grey[300],
-                                            child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                                          ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  // Info Deteksi
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          entry.disease.nama,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Confidence: ${(entry.topConfidence * 100).toStringAsFixed(1)}%',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: entry.topConfidence > 0.5 ? AppColors.primary : AppColors.secondary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          formattedDate,
-                                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                        ),
-                                      ],
+                            return GestureDetector(
+                              onTap: () => _showDetailBottomSheet(context, entry),
+                              child: AppCard(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    // Thumbnail Gambar
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: imageFile.existsSync()
+                                          ? Image.file(
+                                              imageFile,
+                                              width: 80,
+                                              height: 80,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Container(
+                                              width: 80,
+                                              height: 80,
+                                              color: Colors.grey[300],
+                                              child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                                            ),
                                     ),
-                                  ),
-                                  // Tombol Hapus
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext dialogContext) {
-                                          return AlertDialog(
-                                            title: const Text('Hapus Riwayat'),
-                                            content: const Text('Apakah Anda yakin ingin menghapus data riwayat ini?'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.of(dialogContext).pop(),
-                                                child: const Text('Batal'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(dialogContext).pop();
-                                                  context.read<HistoryCubit>().deleteHistory(entry.id);
-                                                },
-                                                child: const Text(
-                                                  'Hapus',
-                                                  style: TextStyle(color: AppColors.error),
+                                    const SizedBox(width: 16),
+                                    // Info Deteksi
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  entry.disease.nama,
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.textPrimary,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
+                                              if (entry.diseaseList.length > 1) ...[
+                                                const SizedBox(width: 6),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey[200],
+                                                    borderRadius: BorderRadius.circular(6),
+                                                    border: Border.all(color: Colors.grey[300]!, width: 0.5),
+                                                  ),
+                                                  child: Text(
+                                                    '+${entry.diseaseList.length - 1}',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.grey[700],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                  )
-                                ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Wrap(
+                                            spacing: 4,
+                                            runSpacing: 4,
+                                            children: entry.labelSummaries.map((summary) {
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.primary.withOpacity(0.08),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  summary,
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            formattedDate,
+                                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Tombol Hapus
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext dialogContext) {
+                                            return AlertDialog(
+                                              title: const Text('Hapus Riwayat'),
+                                              content: const Text('Apakah Anda yakin ingin menghapus data riwayat ini?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.of(dialogContext).pop(),
+                                                  child: const Text('Batal'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(dialogContext).pop();
+                                                    context.read<HistoryCubit>().deleteHistory(entry.id);
+                                                  },
+                                                  child: const Text(
+                                                    'Hapus',
+                                                    style: TextStyle(color: AppColors.error),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    )
+                                  ],
+                                ),
                               ),
                             );
                           },
@@ -547,6 +591,204 @@ class _HistoryPageState extends State<HistoryPage> {
                   ],
                 ),
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDetailBottomSheet(BuildContext context, HistoryWithDetail entry) {
+    final date = DateTime.fromMillisecondsSinceEpoch(entry.detectedAt);
+    final formattedDate = DateFormat('dd MMMM yyyy, HH:mm').format(date);
+    final File imageFile = File(entry.imagePath);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return FutureBuilder<List<String>>(
+          future: DatabaseService.instance.getAllDiseases().then((list) => list.map((d) => d.id).toList()),
+          builder: (context, snapshot) {
+            final availableIds = snapshot.data ?? const [];
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.55,
+              maxChildSize: 0.85,
+              minChildSize: 0.4,
+              expand: false,
+              builder: (stContext, scrollController) {
+                return SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Drag Handle
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Image Preview
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: imageFile.existsSync()
+                            ? Image.file(
+                                imageFile,
+                                width: double.infinity,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                width: double.infinity,
+                                height: 200,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                              ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Title (Top Label)
+                      Text(
+                        entry.disease.nama,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        entry.disease.namaLatin,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Metadata Row (Kategori & Waktu)
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              entry.disease.kategori,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.secondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            formattedDate,
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 32),
+
+                      // Section: Semua Label Terdeteksi (Interactive CTA Badges)
+                      const Text(
+                        'Hasil Deteksi Multi-Label',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: List.generate(entry.diseaseList.length, (index) {
+                          final String diseaseId = entry.diseaseList[index];
+                          final bool isAvailable = availableIds.contains(diseaseId);
+                          final String summary = entry.labelSummaries[index];
+                          
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: isAvailable
+                                  ? () async {
+                                      final disease = await DatabaseService.instance.getDiseaseById(diseaseId);
+                                      if (disease != null && modalContext.mounted) {
+                                        // Tutup sheet terlebih dahulu
+                                        Navigator.pop(modalContext);
+                                        // Navigasi ke halaman detail
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => DiseaseDetailPage(disease: disease),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  : null,
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isAvailable 
+                                      ? AppColors.primary.withOpacity(0.08)
+                                      : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isAvailable 
+                                        ? AppColors.primary.withOpacity(0.2)
+                                        : Colors.grey[300]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      summary,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: isAvailable ? AppColors.primary : Colors.grey[600],
+                                      ),
+                                    ),
+                                    if (isAvailable) ...[
+                                      const SizedBox(width: 6),
+                                      const Icon(
+                                        Icons.open_in_new,
+                                        size: 13,
+                                        color: AppColors.primary,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                );
+              },
             );
           },
         );

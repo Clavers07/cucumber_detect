@@ -53,28 +53,43 @@ class DetectionCubit extends Cubit<DetectionState> {
         // Simpan gambar secara lokal agar tidak hilang saat cache Android dibersihkan
         final savedImagePath = await _saveImageLocally(imageFile);
         
-        // Mapping index kelas model (0-5) ke ID penyakit di SQLite
-        const List<String> diseaseIds = [
-          'batang_sawit_sehat',
-          'buah_sawit_sehat',
-          'busuk_pucuk',
-          'daun_sehat',
-          'hama_tikus',
-          'jamur_ganoderma',
-        ];
-
-        final String diseaseId = topDetection.classIndex < diseaseIds.length 
-            ? diseaseIds[topDetection.classIndex] 
+        final List<String> labels = _mlService.labels;
+        final String topLabel = topDetection.classIndex < labels.length 
+            ? labels[topDetection.classIndex] 
             : 'unknown';
+        final String diseaseId = topLabel.toLowerCase().replaceAll(' ', '_');
+
+        // Kelompokkan deteksi berdasarkan classIndex/diseaseId untuk menghitung count dan rata-rata confidence
+        final Map<String, List<double>> grouped = {};
+        for (var box in detections) {
+          final String label = box.classIndex < labels.length 
+              ? labels[box.classIndex] 
+              : 'unknown';
+          final String id = label.toLowerCase().replaceAll(' ', '_');
+          grouped.putIfAbsent(id, () => []).add(box.confidence);
+        }
+
+        final List<String> diseaseList = [];
+        final List<double> confidenceList = [];
+        final List<int> countList = [];
+
+        for (var entry in grouped.entries) {
+          diseaseList.add(entry.key);
+          countList.add(entry.value.length);
+          final avgConf = entry.value.reduce((a, b) => a + b) / entry.value.length;
+          confidenceList.add(avgConf);
+        }
 
         // Buat model histori
         final historyEntry = HistoryEntry(
           imagePath: savedImagePath,
-          boxes: detections,
           detectedAt: DateTime.now().millisecondsSinceEpoch,
           inferenceTimeMs: inferenceTime,
           diseaseId: diseaseId,
           topConfidence: topDetection.confidence,
+          diseaseList: diseaseList,
+          confidenceList: confidenceList,
+          countList: countList,
         );
 
         // Simpan ke SQLite via Background Service (Asinkronus)

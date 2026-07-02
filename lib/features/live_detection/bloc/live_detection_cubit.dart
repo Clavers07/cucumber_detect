@@ -150,31 +150,46 @@ class LiveDetectionCubit extends Cubit<LiveDetectionState> {
       String diseaseId = "unknown";
       double topConfidence = 0.0;
       
+      final List<String> labels = mlService.labels;
+
       if (frozenState.detections.isNotEmpty) {
         final bestDetection = frozenState.detections.reduce((a, b) => a.confidence > b.confidence ? a : b);
-        
-        const List<String> diseaseIds = [
-          'batang_sawit_sehat',
-          'buah_sawit_sehat',
-          'busuk_pucuk',
-          'daun_sehat',
-          'hama_tikus',
-          'jamur_ganoderma',
-        ];
-
-        if (bestDetection.classIndex < diseaseIds.length) {
-          diseaseId = diseaseIds[bestDetection.classIndex];
-        }
+        final String label = bestDetection.classIndex < labels.length 
+            ? labels[bestDetection.classIndex] 
+            : 'unknown';
+        diseaseId = label.toLowerCase().replaceAll(' ', '_');
         topConfidence = bestDetection.confidence;
+      }
+
+      final Map<String, List<double>> grouped = {};
+      for (var box in frozenState.detections) {
+        final String label = box.classIndex < labels.length 
+            ? labels[box.classIndex] 
+            : 'unknown';
+        final String id = label.toLowerCase().replaceAll(' ', '_');
+        grouped.putIfAbsent(id, () => []).add(box.confidence);
+      }
+
+      final List<String> diseaseList = [];
+      final List<double> confidenceList = [];
+      final List<int> countList = [];
+
+      for (var entry in grouped.entries) {
+        diseaseList.add(entry.key);
+        countList.add(entry.value.length);
+        final avgConf = entry.value.reduce((a, b) => a + b) / entry.value.length;
+        confidenceList.add(avgConf);
       }
 
       final entry = HistoryEntry(
         imagePath: frozenState.imagePath,
-        boxes: frozenState.detections,
         detectedAt: DateTime.now().millisecondsSinceEpoch,
         inferenceTimeMs: 0, // Not tracked separately here
         diseaseId: diseaseId,
         topConfidence: topConfidence,
+        diseaseList: diseaseList,
+        confidenceList: confidenceList,
+        countList: countList,
       );
 
       await DatabaseService.instance.insertHistory(entry);

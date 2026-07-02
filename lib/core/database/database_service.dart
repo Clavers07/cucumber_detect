@@ -25,7 +25,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 2, // Versi 2 untuk migrasi ke tabel penyakit & relasi foreign key
+      version: 3, // Versi 3 untuk restrukturisasi boxes ke list penyakit, confidence, dan count
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -52,7 +52,9 @@ class DatabaseService {
       CREATE TABLE detection_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         image_path TEXT NOT NULL,
-        boxes TEXT NOT NULL,
+        disease_list TEXT NOT NULL,
+        confidence_list TEXT NOT NULL,
+        count_list TEXT NOT NULL,
         detected_at INTEGER NOT NULL,
         inference_time_ms INTEGER NOT NULL,
         disease_id TEXT NOT NULL, -- Relasi Foreign Key
@@ -71,7 +73,7 @@ class DatabaseService {
 
   // Handle migrasi jika versi database sebelumnya adalah versi 1
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
+    if (oldVersion < 3) {
       await db.execute('DROP TABLE IF EXISTS detection_history');
       await db.execute('DROP TABLE IF EXISTS penyakit');
       await _createDB(db, newVersion);
@@ -167,7 +169,9 @@ class DatabaseService {
       SELECT 
         h.id AS history_id,
         h.image_path,
-        h.boxes,
+        h.disease_list,
+        h.confidence_list,
+        h.count_list,
         h.detected_at,
         h.inference_time_ms,
         h.top_confidence,
@@ -181,7 +185,7 @@ class DatabaseService {
         p.penanganan AS disease_penanganan,
         p.pencegahan AS disease_pencegahan
       FROM detection_history h
-      INNER JOIN penyakit p ON h.disease_id = p.id
+      LEFT JOIN penyakit p ON h.disease_id = p.id
       ORDER BY h.detected_at DESC
     ''');
     
