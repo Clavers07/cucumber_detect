@@ -76,10 +76,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/best.tflite
-    - assets/best_int8.tflite
+    # - assets/best.tflite
+    # - assets/best_int8.tflite
     - assets/labels.txt
-    - assets/best_float16.tflite
+    # - assets/best_float16.tflite
     - assets/best_float32.tflite
     - assets/data/
     - assets/images/diseases/
