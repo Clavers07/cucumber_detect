@@ -12,7 +12,7 @@ class MLService {
 
   // Konfigurasi asli yang tidak diubah
   final int inputSize = 640;
-  final int numClasses = 6;
+  int get numClasses => labels.isNotEmpty ? labels.length : 4;
   final int numAnchors = 8400;
   final double confThreshold = 0.25;
   final double iouThreshold = 0.45;
