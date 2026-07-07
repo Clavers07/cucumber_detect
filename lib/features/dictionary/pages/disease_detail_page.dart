@@ -24,7 +24,7 @@ class _DiseaseDetailPageState extends State<DiseaseDetailPage> {
   @override
   void initState() {
     super.initState();
-    _imagePaths = [disease.imagePath];
+    _imagePaths = [];
     _loadAllImages();
   }
 
@@ -40,7 +40,7 @@ class _DiseaseDetailPageState extends State<DiseaseDetailPage> {
       final Map<String, dynamic> manifestMap = json.decode(manifestContent);
       
       final regExp = RegExp(
-        r'^assets/images/diseases/' + disease.id + r'(?:_\d+)?\.(jpg|jpeg|png)$',
+        r'^assets/images/diseases/' + disease.id + r'/[^/]+\.(jpg|jpeg|png|webp)$',
         caseSensitive: false,
       );
       
@@ -96,8 +96,23 @@ class _DiseaseDetailPageState extends State<DiseaseDetailPage> {
                         _currentIndex = index;
                       });
                     },
-                    itemCount: _imagePaths.length,
+                    itemCount: _imagePaths.isEmpty ? 1 : _imagePaths.length,
                     itemBuilder: (context, index) {
+                      if (_imagePaths.isEmpty) {
+                        return Container(
+                          color: AppColors.primary.withOpacity(0.1),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
                       return Image.asset(
                         _imagePaths[index],
                         fit: BoxFit.cover,

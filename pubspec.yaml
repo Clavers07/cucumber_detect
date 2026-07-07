@@ -84,6 +84,18 @@ flutter:
     - assets/data/
     - assets/images/diseases/
     - assets/sawit-up.png
+    - assets/images/diseases/batang_sawit_sehat/
+    - assets/images/diseases/bercak_daun/
+    - assets/images/diseases/buah_sawit_sehat/
+    - assets/images/diseases/busuk_pangkal_batang/
+    - assets/images/diseases/busuk_pucuk/
+    - assets/images/diseases/daun_sehat/
+    - assets/images/diseases/embun_jelaga/
+    - assets/images/diseases/hama_kumbang_tanduk/
+    - assets/images/diseases/hama_tikus/
+    - assets/images/diseases/hawar_daun/
+    - assets/images/diseases/jamur_ganoderma/
+    - assets/images/diseases/karat_daun/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

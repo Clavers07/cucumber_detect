@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../models/disease_model.dart';
@@ -18,6 +20,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
   
   List<DiseaseModel> _allDiseases = [];
   List<DiseaseModel> _filteredDiseases = [];
+  Map<String, String> _diseaseFirstImages = {};
   bool _isLoading = true;
 
   @override
@@ -28,9 +31,32 @@ class _DictionaryPageState extends State<DictionaryPage> {
 
   Future<void> _loadData() async {
     final data = await _dictionaryService.loadDiseases();
+    
+    // Ambil gambar pertama secara dinamis dari folder masing-masing ID penyakit
+    final Map<String, String> firstImages = {};
+    try {
+      final manifestContent = await rootBundle.loadString('AssetManifest.json');
+      final Map<String, dynamic> manifestMap = json.decode(manifestContent);
+      
+      for (var disease in data) {
+        final regExp = RegExp(
+          r'^assets/images/diseases/' + disease.id + r'/[^/]+\.(jpg|jpeg|png|webp)$',
+          caseSensitive: false,
+        );
+        final paths = manifestMap.keys.where((key) => regExp.hasMatch(key)).toList();
+        if (paths.isNotEmpty) {
+          paths.sort();
+          firstImages[disease.id] = paths.first;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading manifest in dictionary page: $e');
+    }
+
     setState(() {
       _allDiseases = data;
       _filteredDiseases = data;
+      _diseaseFirstImages = firstImages;
       _isLoading = false;
     });
   }
@@ -166,7 +192,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
                 child: Image.asset(
-                  disease.imagePath,
+                  _diseaseFirstImages[disease.id] ?? disease.imagePath,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(

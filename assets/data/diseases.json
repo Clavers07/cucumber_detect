@@ -257,26 +257,5 @@
       "Menyesuaikan volume penyiraman agar daun bibit tidak basah menjelang sore/malam hari.",
       "Pemupukan ekstra hara Kalium (K) untuk memperkuat dinding sel daun."
     ]
-  },
-  {
-    "id": "defisiensi_boron",
-    "nama": "Defisiensi Boron",
-    "nama_latin": "Boron Deficiency",
-    "kategori": "Daun",
-    "deskripsi": "Defisiensi Boron adalah gangguan fisiologis yang sangat kritis pada kelapa sawit akibat kekurangan unsur hara mikro boron yang esensial untuk pembelahan sel meristematik, berdampak parah pada malformasi daun baru, gagalnya pembentukan bunga dan buah, hingga penurunan drastis produksi Tandan Buah Segar (TBS).",
-    "ciri_ciri": [
-      "Ujung anak daun mengeriting (hook leaf).",
-      "Daun bergelombang, kusut, rapuh, dan berwarna hijau gelap.",
-      "Anak daun berubah bentuk menjadi seperti sirip ikan hiu (fish-bone leaf).",
-      "Pada tingkat parah, pelepah memendek secara abnormal dengan anak daun menempel di ujungnya (blind-man's walking stick)."
-    ],
-    "penyebab": "Rendahnya ketersediaan unsur Boron di dalam tanah, sering terjadi di tanah berpasir, tanah gambut, atau akibat curah hujan sangat tinggi (pencucian hara), serta ketidakseimbangan kation antagonis seperti tingginya Nitrogen atau Kalsium.",
-    "penanganan": [
-      "Aplikasi pupuk yang mengandung Boron (seperti Borax, HGF Borate, atau Ulexite) di area piringan (weeded circle) dengan dosis sekitar 50–100 gram/pohon tergantung umur dan tingkat keparahan."
-    ],
-    "pencegahan": [
-      "Melakukan pemupukan berimbang berdasarkan hasil Analisis Daun (LSU) dan Analisis Tanah tahunan.",
-      "Menghindari aplikasi pupuk N (Urea) dalam dosis berlebihan yang dapat menekan penyerapan Boron."
-    ]
   }
 ]

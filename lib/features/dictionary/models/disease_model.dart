@@ -49,6 +49,6 @@ class DiseaseModel {
     };
   }
 
-  // Path ke gambar sesuai id, ekstensi defaultnya jpg
-  String get imagePath => 'assets/images/diseases/$id.jpg';
+  // Path ke gambar utama di dalam subfolder penyakit
+  String get imagePath => 'assets/images/diseases/$id/$id.jpg';
 }
