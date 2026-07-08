@@ -6,7 +6,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../data/models/detection_models.dart';
 
 // Kelas argument untuk Isolate compute
@@ -45,14 +44,16 @@ Future<Uint8List?> processImageForPdf(ImageProcessInput input) async {
     final int originalWidth = decoded.width;
     final int originalHeight = decoded.height;
 
-    // 2. Tempel bounding box sesuai warna label
+    // 2. Tempel bounding box sesuai warna label (4 warna pertama disesuaikan)
     final List<img.Color> colors = [
       img.ColorRgb8(255, 0, 0),     // Red
-      img.ColorRgb8(0, 0, 255),     // Blue
-      img.ColorRgb8(0, 255, 0),     // Green
+      img.ColorRgb8(68, 138, 255),  // Blue Accent
+      img.ColorRgb8(105, 240, 174), // Green Accent
+      img.ColorRgb8(140, 158, 255), // Indigo Accent
       img.ColorRgb8(255, 165, 0),   // Orange
       img.ColorRgb8(128, 0, 128),   // Purple
       img.ColorRgb8(0, 255, 255),   // Cyan
+      img.ColorRgb8(255, 215, 64),  // Amber Accent
     ];
 
     final filtered = input.detections.where((box) => box.confidence >= input.threshold).toList();
@@ -116,6 +117,18 @@ class PdfExportService {
     final fontTitle = await PdfGoogleFonts.openSansBold();
     final fontBody = await PdfGoogleFonts.openSansRegular();
 
+    // Daftar warna untuk Legenda PDF (sesuai dengan bounding box)
+    final List<PdfColor> pdfColorsList = [
+      PdfColors.red,                // Red
+      PdfColor.fromInt(0xFF448AFF), // Blue Accent
+      PdfColor.fromInt(0xFF69F0AE), // Green Accent
+      PdfColor.fromInt(0xFF8C9EFF), // Indigo Accent
+      PdfColor.fromInt(0xFFFFA500), // Orange
+      PdfColor.fromInt(0xFF800080), // Purple
+      PdfColor.fromInt(0xFF00FFFF), // Cyan
+      PdfColor.fromInt(0xFFFFD740), // Amber Accent
+    ];
+
     // Halaman Laporan Utama berbentuk Tabel (Split otomatis ke halaman baru via MultiPage)
     pdf.addPage(
       pw.MultiPage(
@@ -162,14 +175,49 @@ class PdfExportService {
             ),
             pw.SizedBox(height: 16),
 
+            // Legenda Warna Penyakit
+            pw.Text(
+              'Legenda Warna Deteksi:',
+              style: pw.TextStyle(font: fontTitle, fontSize: 10, color: PdfColors.teal800),
+            ),
+            pw.SizedBox(height: 6),
+            pw.Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              children: List.generate(labels.length, (idx) {
+                final color = pdfColorsList[idx % pdfColorsList.length];
+                final name = labels[idx];
+                return pw.Row(
+                  mainAxisSize: pw.MainAxisSize.min,
+                  children: [
+                    pw.Container(
+                      width: 8,
+                      height: 8,
+                      decoration: pw.BoxDecoration(
+                        color: color,
+                        shape: pw.BoxShape.circle,
+                      ),
+                    ),
+                    pw.SizedBox(width: 4),
+                    pw.Text(
+                      name,
+                      style: pw.TextStyle(font: fontBody, fontSize: 9, color: PdfColors.grey800),
+                    ),
+                  ],
+                );
+              }),
+            ),
+            pw.SizedBox(height: 16),
+
             // Tabel Utama Riwayat Deteksi
             pw.Table(
               border: pw.TableBorder.all(color: PdfColors.grey400),
               columnWidths: {
-                0: const pw.FlexColumnWidth(0.6), // No
-                1: const pw.FlexColumnWidth(2.2), // Gambar (2x lebih kecil)
-                2: const pw.FlexColumnWidth(4.7), // Summary Label (ke bawah, comma separated)
-                3: const pw.FlexColumnWidth(2.5), // Tanggal
+                0: const pw.FixedColumnWidth(30), // No (lebar absolut agar tidak terhimpit)
+                1: const pw.FlexColumnWidth(3.3), // Gambar (1.5x lebih besar)
+                2: const pw.FlexColumnWidth(4.0), // Summary Label (ke bawah, comma separated)
+                3: const pw.FlexColumnWidth(2.7), // Validasi
+                4: const pw.FlexColumnWidth(2.1), // Tanggal
               },
               children: [
                 // Header Table
@@ -179,6 +227,7 @@ class PdfExportService {
                     _buildTableHeaderCell(fontTitle, 'No'),
                     _buildTableHeaderCell(fontTitle, 'Gambar'),
                     _buildTableHeaderCell(fontTitle, 'Hasil Deteksi AI'),
+                    _buildTableHeaderCell(fontTitle, 'Validasi'),
                     _buildTableHeaderCell(fontTitle, 'Tanggal'),
                   ],
                 ),
@@ -210,12 +259,12 @@ class PdfExportService {
                         padding: const pw.EdgeInsets.all(6),
                         child: pw.Text('${index + 1}', style: pw.TextStyle(font: fontBody, fontSize: 9), textAlign: pw.TextAlign.center),
                       ),
-                      // Gambar (2x lebih kecil: layout height 60px)
+                      // Gambar (Diperbesar 1.5x ke 90px)
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
                         child: imageBytes != null
                             ? pw.Container(
-                                height: 60,
+                                height: 90,
                                 alignment: pw.Alignment.center,
                                 child: pw.Image(
                                   pw.MemoryImage(imageBytes),
@@ -223,7 +272,7 @@ class PdfExportService {
                                 ),
                               )
                             : pw.Container(
-                                height: 60,
+                                height: 90,
                                 color: PdfColors.grey200,
                                 child: pw.Center(
                                   child: pw.Text('No Image', style: pw.TextStyle(font: fontBody, fontSize: 7)),
@@ -234,6 +283,16 @@ class PdfExportService {
                       pw.Padding(
                         padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                         child: pw.Text(summaryText, style: pw.TextStyle(font: fontBody, fontSize: 9)),
+                      ),
+                      // Kolom Validasi
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Center(
+                          child: pw.Text(
+                            '[  ] benar   [  ] salah',
+                            style: pw.TextStyle(font: fontBody, fontSize: 9),
+                          ),
+                        ),
                       ),
                       // Tanggal
                       pw.Padding(
@@ -253,35 +312,12 @@ class PdfExportService {
     return pdf.save();
   }
 
-  static pw.Widget _buildReportSummaryRow(pw.Font titleFont, pw.Font bodyFont, String label, String value) {
-    return pw.Row(
-      children: [
-        pw.SizedBox(
-          width: 140,
-          child: pw.Text(label, style: pw.TextStyle(font: titleFont, fontSize: 10, color: PdfColors.grey800)),
-        ),
-        pw.Text(value, style: pw.TextStyle(font: bodyFont, fontSize: 10, color: PdfColors.grey900)),
-      ],
-    );
-  }
-
   static pw.Widget _buildTableHeaderCell(pw.Font font, String text) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(6),
       child: pw.Text(
         text,
         style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.teal900),
-        textAlign: pw.TextAlign.center,
-      ),
-    );
-  }
-
-  static pw.Widget _buildTableCell(pw.Font font, String text) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.all(6),
-      child: pw.Text(
-        text,
-        style: pw.TextStyle(font: font, fontSize: 9),
         textAlign: pw.TextAlign.center,
       ),
     );

@@ -72,11 +72,13 @@ class ImageUtils {
 
         final List<img.Color> colors = [
           img.ColorRgb8(255, 0, 0),     // Red
-          img.ColorRgb8(0, 0, 255),     // Blue
-          img.ColorRgb8(0, 255, 0),     // Green
+          img.ColorRgb8(68, 138, 255),  // Blue Accent
+          img.ColorRgb8(105, 240, 174), // Green Accent
+          img.ColorRgb8(140, 158, 255), // Indigo Accent
           img.ColorRgb8(255, 165, 0),   // Orange
           img.ColorRgb8(128, 0, 128),   // Purple
           img.ColorRgb8(0, 255, 255),   // Cyan
+          img.ColorRgb8(255, 215, 64),  // Amber Accent
         ];
 
         // Filter deteksi berdasarkan confidence threshold

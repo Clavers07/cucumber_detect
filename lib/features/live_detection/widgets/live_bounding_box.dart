@@ -79,13 +79,13 @@ class _LiveBoundingBoxPainter extends CustomPainter {
         Colors.redAccent,
         Colors.blueAccent,
         Colors.greenAccent,
+        Colors.indigoAccent,
         Colors.orangeAccent,
         Colors.purpleAccent,
         Colors.cyanAccent,
         Colors.pinkAccent,
         Colors.tealAccent,
         Colors.amberAccent,
-        Colors.indigoAccent,
       ];
       
       final Color baseColor = classColors[det.classIndex % classColors.length];
@@ -93,8 +93,9 @@ class _LiveBoundingBoxPainter extends CustomPainter {
       boxPaint.color = baseColor;
       textBgPaint.color = baseColor.withOpacity(0.8);
 
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(8)),
+      // Mengubah RRect menjadi Rect biasa (kotak tanpa corner radius)
+      canvas.drawRect(
+        rect,
         boxPaint,
       );
 
@@ -123,8 +124,9 @@ class _LiveBoundingBoxPainter extends CustomPainter {
         textPainter.height + 4,
       );
       
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(textBgRect, const Radius.circular(4)),
+      // Mengubah RRect menjadi Rect biasa
+      canvas.drawRect(
+        textBgRect,
         textBgPaint,
       );
 

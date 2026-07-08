@@ -820,6 +820,7 @@ class _HistoryPageState extends State<HistoryPage> {
       ),
       builder: (modalContext) {
         double localThreshold = 0.40; // State threshold lokal untuk modal ini
+        bool localShowLabels = true; // State local untuk menampilkan label deteksi
 
         return StatefulBuilder(
           builder: (stContext, setState) {
@@ -882,7 +883,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                         height: 200,
                                         width: double.infinity,
                                         color: Colors.black,
-                                        child: FutureBuilder<ImageInfo>(
+                          child: FutureBuilder<ImageInfo>(
                                           future: _getImageInfo(imageFile),
                                           builder: (context, infoSnapshot) {
                                             if (!infoSnapshot.hasData) {
@@ -893,7 +894,8 @@ class _HistoryPageState extends State<HistoryPage> {
                                               detections: filteredBoxes,
                                               originalWidth: infoSnapshot.data!.image.width.toDouble(),
                                               originalHeight: infoSnapshot.data!.image.height.toDouble(),
-                                              labels: const [], // labels tidak dipakai di BoundingBoxOverlay
+                                              labels: _labels, // Menggunakan label asli dari assets/labels.txt
+                                              showLabels: localShowLabels,
                                             );
                                           },
                                         ),
@@ -1093,6 +1095,27 @@ class _HistoryPageState extends State<HistoryPage> {
                                   });
                                 },
                               ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Tampilkan Label Deteksi',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                ),
+                                Switch(
+                                  value: localShowLabels,
+                                  activeColor: AppColors.primary,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      localShowLabels = value;
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 12),
                           ],

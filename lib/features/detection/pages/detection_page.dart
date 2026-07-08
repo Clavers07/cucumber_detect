@@ -24,6 +24,7 @@ class DetectionPage extends StatefulWidget {
 
 class _DetectionPageState extends State<DetectionPage> {
   double _confidenceThreshold = 0.40; // Default threshold
+  bool _showLabels = true; // State untuk menampilkan label deteksi
 
   @override
   void initState() {
@@ -177,6 +178,7 @@ class _DetectionPageState extends State<DetectionPage> {
             originalWidth: snapshot.data!.image.width.toDouble(),
             originalHeight: snapshot.data!.image.height.toDouble(),
             labels: state.labels,
+            showLabels: _showLabels,
           );
         },
       );
@@ -320,6 +322,27 @@ class _DetectionPageState extends State<DetectionPage> {
               },
             ),
           ),
+          const SizedBox(height: 12),
+          const Divider(),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Tampilkan Label Deteksi',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              ),
+              Switch(
+                value: _showLabels,
+                activeColor: AppColors.primary,
+                onChanged: (value) {
+                  setState(() {
+                    _showLabels = value;
+                  });
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -432,7 +455,41 @@ class _DetectionResultTabsState extends State<_DetectionResultTabs> with TickerP
             labelColor: AppColors.primary,
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppColors.primary,
-            tabs: _tabs.map((t) => Tab(text: '$t (${_grouped[t]!.length})')).toList(),
+            tabs: _tabs.map((t) {
+              final firstDet = _grouped[t]!.first;
+              // Daftar warna disinkronkan dengan BoundingBoxOverlay
+              final List<Color> classColors = [
+                Colors.redAccent,
+                Colors.blueAccent,
+                Colors.greenAccent,
+                Colors.indigoAccent,
+                Colors.orangeAccent,
+                Colors.purpleAccent,
+                Colors.cyanAccent,
+                Colors.pinkAccent,
+                Colors.tealAccent,
+                Colors.amberAccent,
+              ];
+              final Color baseColor = classColors[firstDet.classIndex % classColors.length];
+              
+              return Tab(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: baseColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text('$t (${_grouped[t]!.length})'),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
           AnimatedBuilder(
             animation: _tabController,

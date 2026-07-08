@@ -8,6 +8,7 @@ class BoundingBoxOverlay extends StatelessWidget {
   final double originalWidth;
   final double originalHeight;
   final List<String> labels;
+  final bool showLabels;
 
   const BoundingBoxOverlay({
     super.key,
@@ -16,6 +17,7 @@ class BoundingBoxOverlay extends StatelessWidget {
     required this.originalWidth,
     required this.originalHeight,
     required this.labels,
+    this.showLabels = true,
   });
 
   @override
@@ -52,27 +54,62 @@ class BoundingBoxOverlay extends StatelessWidget {
                 Colors.redAccent,
                 Colors.blueAccent,
                 Colors.greenAccent,
+                Colors.indigoAccent,
                 Colors.orangeAccent,
                 Colors.purpleAccent,
                 Colors.cyanAccent,
                 Colors.pinkAccent,
                 Colors.tealAccent,
                 Colors.amberAccent,
-                Colors.indigoAccent,
               ];
               
               final Color baseColor = classColors[d.classIndex % classColors.length];
 
+              final double leftPos = d.x * dw + ox;
+              final double topPos = d.y * dh + oy;
+              final double widthPos = d.w * dw;
+              final double heightPos = d.h * dh;
+              final bool showLabelAbove = topPos > 20;
+
               return Positioned(
-                left: d.x * dw + ox,
-                top: d.y * dh + oy,
-                width: d.w * dw,
-                height: d.h * dh,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: baseColor, width: 1.25), // Ketebalan bounding box detection
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                left: leftPos,
+                top: showLabelAbove ? topPos - 18 : topPos,
+                width: widthPos,
+                height: showLabelAbove ? heightPos + 18 : heightPos,
+                child: Stack(
+                  children: [
+                    // Bounding box outline (kotak tajam tanpa corner radius)
+                    Positioned(
+                      left: 0,
+                      top: showLabelAbove ? 18 : 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: baseColor, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    // Label badge
+                    if (showLabels)
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          color: baseColor,
+                          child: Text(
+                            '$className ${(d.confidence * 100).toStringAsFixed(0)}%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               );
             }),
