@@ -136,7 +136,7 @@ class PdfExportService {
                     ),
                     pw.SizedBox(height: 4),
                     pw.Text(
-                      'Aplikasi Cucumber Detect - Hasil Analisis Citra AI',
+                      'Aplikasi Sawit Up - Hasil Deteksi Citra AI',
                       style: pw.TextStyle(font: fontBody, fontSize: 10, color: PdfColors.grey700),
                     ),
                   ],

@@ -84,9 +84,8 @@
     "nama": "Bercak Daun",
     "nama_latin": "Curvularia eragrostidis",
     "kategori": "Daun",
-    "deskripsi": "Penyakit bercak daun pada kelapa sawit adalah infeksi patogen jamur yang umumnya menyerang daun tanaman pada fase pembibitan hingga tanaman belum menghasilkan (TBM), yang berdampak pada rusaknya jaringan klorofil sehingga menghambat laju fotosintesis, menyebabkan pertumbuhan bibit menjadi kerdil, dan jika dibiarkan dapat memicu kematian bibit.",
+    "deskripsi": "Penyakit bercak daun pada kelapa sawit adalah infeksi patogen jamur/cendawan patogen yang umumnya menyerang daun tanaman pada fase pembibitan hingga tanaman belum menghasilkan (TBM), yang berdampak pada rusaknya jaringan klorofil sehingga menghambat laju fotosintesis, menyebabkan pertumbuhan bibit menjadi kerdil, dan jika dibiarkan dapat memicu kematian bibit.",
     "ciri_ciri": [
-      "Munculnya bercak tembus cahaya berwarna kuning kehijauan pada daun muda.",
       "Bercak membesar menjadi warna cokelat dengan pusat berwarna kelabu.",
       "Terdapat lingkaran kuning (halo) di sekeliling bercak.",
       "Pada serangan lanjut, bercak menyatu dan daun menjadi kering."
@@ -130,10 +129,10 @@
     "kategori": "Batang",
     "deskripsi": "Busuk Pangkal Batang (BPB) adalah penyakit mematikan berupa hancurnya jaringan pengangkut (xilem dan floem) di pangkal batang sawit, yang berdampak pada berhentinya translokasi air dan hara dari akar ke tajuk, menyebabkan malnutrisi parah, berhentinya produksi buah, dan pada akhirnya membuat pohon tumbang atau mati berdiri.",
     "ciri_ciri": [
-      "Tajuk/Daun: Akumulasi 3 atau lebih daun tombak (janur pucuk) yang tidak mau membuka.",
-      "Daun bagian bawah menguning pucat (klorosis) yang meluas ke atas.",
-      "Pelepah: Pelepah tua patah menggantung di sekitar batang (sengklek) dan membentuk seperti \"rok\".",
-      "Batang: Pangkal batang terlihat keropos, melekuk ke dalam, dan jika ditusuk akan terasa lunak atau hancur di bagian dalamnya."
+      "Daun Muda: Muncul 3 atau lebih daun muda di pucuk yang tetap kuncup (seperti tombak) dan tidak mau mengembang.",
+      "Daun Tua: Daun bagian bawah berubah kuning pucat, lalu mengering dan menular ke daun di atasnya.",
+      "Pelepah: Pelepah tua patah ke bawah tetapi tidak lepas, sehingga menggelantung mengelilingi batang seperti \"rok\".",
+      "Batang: Bagian bawah batang tampak keropos dan melekuk. Jika ditusuk, bagian dalamnya terasa lunak atau hancur."
     ],
     "penyebab": "Kerusakan struktural and pembusukan lignin di dalam batang yang diakibatkan oleh invasi miselium jamur Ganoderma boninense.",
     "penanganan": [
